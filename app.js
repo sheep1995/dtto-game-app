@@ -1,15 +1,24 @@
 const express = require('express');
-const app = express();
 const config = require('./config');
-const exampleRouter = require('./routes/example');
 const userRouter = require('./routes/user');
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerOptions = require('./swaggerOptions'); // Import the swaggerOptions file
+
+const app = express();
+
+// Define the Swagger specification
+const specs = swaggerJsdoc(swaggerOptions);
 
 // Middleware
 app.use(express.json());
 
 // Routes
-app.use('/api/example', exampleRouter);
 app.use('/api/users', userRouter);
+
+// Serve Swagger documentation using Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Start server
 app.listen(config.port, () => {

@@ -1,21 +1,3 @@
-// const express = require('express');
-// const router = express.Router();
-// const userController = require('../controllers/user');
-// const authMiddleware = require('../middlewares/auth');
-// const { body } = require('express-validator');
-
-// // Handle the /users endpoint
-// router.get('/', authMiddleware.authenticate, userController.getUsersList);
-// router.get('/:userId', authMiddleware.authenticate, userController.getUserById);
-// router.post('/', [
-//     authMiddleware.authenticate,
-//     // Input validation middleware using express-validator
-//     body('name').isLength({ min: 3 }).withMessage('Name must be at least 3 characters long'),
-//     body('email').isEmail().withMessage('Invalid email address'),
-// ], userController.addUser);
-
-// module.exports = router;
-
 /**
  * @swagger
  * tags:
@@ -25,104 +7,35 @@
 
 const express = require('express');
 const router = express.Router();
-const userController = require('../controllers/user');
+const UserController = require('../controllers/user');
 const authMiddleware = require('../middlewares/auth');
-const { body } = require('express-validator');
+const { body, validationResult } = require('express-validator');
 
-/**
- * @swagger
- * /users:
- *   get:
- *     summary: Get all users
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                   username:
- *                     type: string
- *                   email:
- *                     type: string
- *             example:
- *               - id: 1
- *                 username: sammy
- *                 email: sammy@gmail.com
- *               - id: 2
- *                 username: andy
- *                 email: andy@gmail.com
- *       500:
- *         description: Internal server error
- */
-router.get('/', authMiddleware.authenticate, userController.getUsersList);
+router.post('/login', [
+    body('uId').isLength({ min: 3 }).withMessage('uId must be at least 3 characters long'),
+    body('type').custom(value => {
+        if (!Number.isInteger(value)) {
+            throw new Error('type must be an integer');
+        }
 
-/**
- * @swagger
- * /users/{userId}:
- *   get:
- *     summary: Get user by ID
- *     tags: [Users]
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         description: ID of the user to retrieve
- *         schema:
- *           type: integer
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Success
- *       404:
- *         description: User not found
- *       500:
- *         description: Internal server error
- */
-router.get('/:userId', authMiddleware.authenticate, userController.getUserById);
+        if (value < 1 || value > 20) {
+            throw new Error('type must be between 1 and 20');
+        }
+        return true;
+    }),
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    
+    const userControllerInstance = new UserController();
+    userControllerInstance.login(req, res);
+});
 
-/**
- * @swagger
- * /users:
- *   post:
- *     summary: Add a new user
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *           example:
- *             name: John Doe
- *             email: john@example.com
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       201:
- *         description: User created successfully
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post('/', [
-    body('name').isLength({ min: 3 }).withMessage('Name must be at least 3 characters long'),
-    body('email').isEmail().withMessage('Invalid email address'),
-], authMiddleware.authenticate, userController.addUser);
+router.post('/refreshToken', authMiddleware.authenticate, (req, res) => {
+    const userControllerInstance = new UserController();
+    userControllerInstance.refreshToken(req, res);
+});
 
 module.exports = router;

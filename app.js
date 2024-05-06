@@ -15,7 +15,7 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use(express.json());
 
 // Routes
-app.use('/api/users', userRouter);
+app.use('/api/user', userRouter);
 
 // Serve Swagger documentation using Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

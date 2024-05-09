@@ -1,6 +1,13 @@
 import { Pool, PoolConnection } from 'mysql2/promise'; // 导入 mysql2/promise 中的 Pool 和 PoolConnection 类型
 import pool from '../database'
 
+interface User {
+    uId: string;
+    userId: string;
+    loginType: number;
+    // 其他用户属性...
+}
+
 class UserModel {
     private pool: Pool; // 将 pool 属性声明为私有属性
 
@@ -24,7 +31,6 @@ class UserModel {
         try {
             const sql = 'SELECT * FROM users WHERE uId = ?';
             const [rows] = await this.query(sql, [uId]);
-            console.log('rows', rows);
             return rows ?? null;
         } catch (error) {
             throw error;
@@ -55,10 +61,10 @@ class UserModel {
     //     }
     // }
 
-    async addUser(uId: string, userId: string, token: string, type: number) {
+    async addUser(uId: string, userId: string, token: string, loginType: number) {
         const connection: PoolConnection = await this.pool.getConnection(); // 指定 connection 变量的类型为 PoolConnection
         try {
-            await connection.execute('INSERT INTO users (uId, userId, token, type) VALUES (?, ?, ?, ?)', [uId, userId, token, type]);
+            await connection.execute('INSERT INTO users (uId, userId, token, loginType) VALUES (?, ?, ?, ?)', [uId, userId, token, loginType]);
         } catch (error) {
             throw error;
         } finally {

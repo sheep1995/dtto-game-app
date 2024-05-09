@@ -33,7 +33,7 @@ const _router: Router = Router({
  *               uId:
  *                 type: string
  *                 minLength: 3
- *               type:
+ *               loginType:
  *                 type: integer
  *                 minimum: 1
  *                 maximum: 20
@@ -66,7 +66,7 @@ const _router: Router = Router({
  *       500:
  *         description: Internal server error. Something went wrong on the server side.
  */
-_router.route('/login').post(validate([uId('uId'), loginType('type')]), userController.login)
+_router.route('/login').post(validate([uId('uId'), loginType('loginType')]), userController.login)
 
 /**
  * @swagger

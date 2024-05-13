@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import ScoreModel from '../models/ScoreModel';
-import config from '../config';
 
 const scoreModel = new ScoreModel();
 
@@ -24,7 +22,19 @@ async function getPlayerScores(req: Request, res: Response): Promise<void> {
     }
 }
 
-async function addScore(req: Request, res: Response): Promise<void> {
+async function getTop100(req: Request, res: Response): Promise<void> {
+    const gameMode = req.query.gameMode?.toString();
+
+    try {
+        const top = await scoreModel.getTop100(gameMode);
+        res.json({ top });
+    } catch (error) {
+        console.error('Error getting scores:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+async function addScoreRecord(req: Request, res: Response): Promise<void> {
     const { score, playTimeMs, gameMode }: { score: number; playTimeMs: number; gameMode: string } = req.body;
     const { userId } = req.user;
     try {
@@ -36,4 +46,4 @@ async function addScore(req: Request, res: Response): Promise<void> {
     }
 }
 
-export default { getPlayerScores, addScore };
+export default { getPlayerScores, addScoreRecord, getTop100};

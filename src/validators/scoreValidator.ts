@@ -1,6 +1,6 @@
-import { body } from 'express-validator';
+import { body, query } from 'express-validator';
 
-const gameMode = (field: string) => {
+const gameModeOfBody = (field: string) => {
     const validGameModes = ['Normal', 'LimitedTime', '2000'];
 
     return body(field)
@@ -13,6 +13,42 @@ const gameMode = (field: string) => {
         .custom((value: string) => {
             if (!validGameModes.includes(value)) {
                 throw new Error(`Invalid gameMode. Allowed values are: ${validGameModes.join(', ')}`);
+            }
+            return true;
+        });
+};
+
+const gameModeOfQuery = (field: string) => {
+    const validGameModes = ['Normal', 'LimitedTime', '2000'];
+
+    return query(field)
+        .isString()
+        .withMessage(
+            `${field} type must be a string.`
+        )
+        .trim()
+        .escape()
+        .custom((value: string) => {
+            if (!validGameModes.includes(value)) {
+                throw new Error(`Invalid gameMode. Allowed values are: ${validGameModes.join(', ')}`);
+            }
+            return true;
+        });
+};
+
+const period = (field: string) => {
+    const validPeriod = ['today', 'thisWeek', 'allTime'];
+
+    return query(field)
+        .isString()
+        .withMessage(
+            `${field} type must be a string.`
+        )
+        .trim()
+        .escape()
+        .custom((value: string) => {
+            if (!validPeriod.includes(value)) {
+                throw new Error(`Invalid period. Allowed values are: ${validPeriod.join(', ')}`);
             }
             return true;
         });
@@ -47,7 +83,9 @@ const playTimeMs = (field: string) => {
 };
 
 export { 
-    gameMode,
+    gameModeOfBody,
+    gameModeOfQuery,
+    period,
     score,
     playTimeMs
 };

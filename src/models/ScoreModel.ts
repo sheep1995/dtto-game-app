@@ -63,6 +63,20 @@ class ScoreModel {
         }
     }
 
+    async getTop100(gameMode: string) {
+        await this.initConnection();
+
+        try {
+            const sql = `SELECT * FROM Scores_${gameMode} ORDER BY score DESC LIMIT 100`
+            const [rows] = await this.connection.query(sql);
+            return rows;
+        } catch (error) {
+            throw error;
+        } finally {
+            await this.releaseConnection();
+        }
+    }
+
     async addScore(userId: string, score: number, playTimeMs: number, gameMode: string) {
         await this.initConnection();
     

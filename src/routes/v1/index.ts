@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { router as UserRouter } from './userRoutes';
 import { router as ScoreRoutes } from './scoreRoutes';
+import { router as AdRoutes } from './adRoutes';
 
 const _router: Router = Router({
     mergeParams: true,
@@ -20,6 +21,7 @@ _router.route('/v1/health-check').get(function (req: Request, res: Response) {
 
 //EXPORT ROUTES WITH BASEPATH
 _router.use('/v1/user', UserRouter);
-_router.use('/v1/score', ScoreRoutes);
+_router.use('/v1/scores', ScoreRoutes);
+_router.use('/v1/ads', AdRoutes);
 
 export const router = _router;

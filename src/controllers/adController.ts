@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import AdModel from '../models/AdModel';
-import { format } from 'date-fns-tz';
+import { getDateWithOffset } from '../utils';
 
 const adModel = new AdModel();
 
@@ -9,7 +9,7 @@ async function getAdCount(req: Request, res: Response): Promise<void> {
     const { userId } = req.user;
 
     try {
-        const date = getTodayDate();
+        const date = getDateWithOffset();
         const adCount = await adModel.getAdCount(adItemName, userId, date);
 
         res.json({ adCount });
@@ -24,7 +24,7 @@ async function decrementAdCount(req: Request, res: Response): Promise<void> {
     const { userId } = req.user;
 
     try {
-        const date = getTodayDate();
+        const date = getDateWithOffset();
         const adCount = await adModel.decrementAdCount(adItemName, userId, date);
 
         res.json({ adCount });
@@ -44,7 +44,7 @@ async function setAdCount(req: Request, res: Response): Promise<void> {
     const { count } = req.body;
 
     try {
-        const date = getTodayDate();
+        const date = getDateWithOffset();
         const adCount = await adModel.setAdCount(adItemName, userId, date, count);
 
         res.json({ adCount });
@@ -53,11 +53,5 @@ async function setAdCount(req: Request, res: Response): Promise<void> {
         res.status(500).json({ error: 'Internal server error' });
     }
 }
-
-function getTodayDate(timezone = 'Asia/Taipei') {
-    const today = new Date();
-    const formattedDate = format(today, 'yyyy-MM-dd', { timeZone: timezone });
-    return formattedDate;
-  }
 
 export default { getAdCount, decrementAdCount, setAdCount };

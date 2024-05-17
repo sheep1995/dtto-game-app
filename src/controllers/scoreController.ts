@@ -24,9 +24,10 @@ async function getPlayerScores(req: Request, res: Response): Promise<void> {
 
 async function getTop100(req: Request, res: Response): Promise<void> {
     const gameMode = req.query.gameMode?.toString();
+    const period = req.query.period?.toString();
 
     try {
-        const top = await scoreModel.getTop100(gameMode);
+        const top = await scoreModel.getTop100ByRedis(gameMode, period);
         res.json({ top });
     } catch (error) {
         console.error('Error getting scores:', error);
@@ -39,6 +40,7 @@ async function addScoreRecord(req: Request, res: Response): Promise<void> {
     const { userId } = req.user;
     try {
         await scoreModel.addScore(userId, score, playTimeMs, gameMode);
+        await scoreModel.addScoreToRedis(userId, score, gameMode);
         res.json({ message: `新增成功` });
     } catch (error) {
         console.error(error);
@@ -46,4 +48,17 @@ async function addScoreRecord(req: Request, res: Response): Promise<void> {
     }
 }
 
-export default { getPlayerScores, addScoreRecord, getTop100};
+async function getRanking(req: Request, res: Response): Promise<void> {
+    const gameMode = req.query.gameMode?.toString();
+    const period = req.query.period?.toString();
+    const { userId } = req.user;
+    try {
+        const ranking = await scoreModel.getRankingByRedis(userId, gameMode, period);
+        res.json({ ranking });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+export default { getPlayerScores, addScoreRecord, getTop100, getRanking};

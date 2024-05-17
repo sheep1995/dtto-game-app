@@ -20,8 +20,8 @@ _router.get('/top-players', validate([
     gameModeOfQuery('gameMode'), period('period')
 ]), authMiddleware, scoreController.getTop100);
 
-// _router.get('/ranking', validate([
-//     gameMode('gameMode'), period('period')
-// ]), authMiddleware, scoreController.getRanking);
+_router.get('/ranking', validate([
+    gameModeOfQuery('gameMode'), period('period')
+]), authMiddleware, scoreController.getRanking);
 
 export const router = _router;

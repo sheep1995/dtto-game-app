@@ -6,12 +6,17 @@ import User from '../models/User';
 // 定义 authenticate 函数的类型声明
 type AuthenticateFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
+const pathsNoRequiringAuth = ['/api/v1/user/login',]; // 不需要 JWT 驗證的 paths
 // authenticate 函数
 const authenticate: AuthenticateFunction = async (req, res, next) => {
     try {
         // Get the token from the request headers
         const token = req.headers.authorization;
+        const noRequiresAuth = pathsNoRequiringAuth.some(path => req.path.startsWith(path));
 
+        if (noRequiresAuth) {
+            return next();
+        }
         // Check if token exists
         if (!token) {
             res.status(401).json({ error: 'Unauthorized: No token provided' });

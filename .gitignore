@@ -1,2 +1,4 @@
 dist/*
 node_modules/*
+*.log
+.209167210eb46fb4df0628db71984edb344f5eb6-audit.json

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { router as UserRouter } from './userRoutes';
 import { router as ScoreRoutes } from './scoreRoutes';
 import { router as AdRoutes } from './adRoutes';
+import { router as PurchaseRoutes } from './purchaseRoutes';
 
 const _router: Router = Router({
     mergeParams: true,
@@ -23,5 +24,6 @@ _router.route('/v1/health-check').get(function (req: Request, res: Response) {
 _router.use('/v1/user', UserRouter);
 _router.use('/v1/scores', ScoreRoutes);
 _router.use('/v1/ads', AdRoutes);
+_router.use('/v1/purchase', PurchaseRoutes);
 
 export const router = _router;

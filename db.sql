@@ -22,6 +22,27 @@ CREATE TABLE Scores_LimitedTime (
     createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE UserItems (
+    userId VARCHAR(10),
+    itemId VARCHAR(25),
+    quantity INT NOT NULL,
+    updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (userId, itemId ),
+    FOREIGN KEY (userId) REFERENCES Users(userId)
+);
+
+CREATE TABLE Purchases (
+    transactionId VARCHAR(100) PRIMARY KEY,
+    userId VARCHAR(10),
+    commodityId VARCHAR(99),
+    quantity INT,
+    price INT,
+    status VARCHAR(50),
+    createdTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES Users(userId)
+);
+
 /*
 增加隨機分數紀錄
 */

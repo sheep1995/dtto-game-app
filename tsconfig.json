@@ -9,6 +9,8 @@
     "allowJs": true,
     "checkJs": true,
     "declaration": true,
+    "strict": false, // 啟用嚴格模式
+    "skipLibCheck": true, //跳過 node_modules 中的類型檢查
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -16,6 +18,7 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "pretty": true,
+    "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "typeRoots": [
       "node_modules/@types"

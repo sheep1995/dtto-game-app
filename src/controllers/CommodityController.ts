@@ -1,12 +1,24 @@
 import { Request, Response } from 'express';
 import { CommodityService } from '../services/CommodityService';
-import { Commodity } from '../models/Commodity';
 
 export class CommodityController {
-    constructor(private readonly commodityService: CommodityService) {}
-  
-    async getCommodityList(req: Request, res: Response) {
-      const commodities = await this.commodityService.getCommodityList();
+  private commodityService = new CommodityService();
+
+  async getAllCommodities(req: Request, res: Response) {
+    try {
+      const commodities = await this.commodityService.getAllCommodities();
       res.json(commodities);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   }
+
+  async createCommodity(req: Request, res: Response) {
+    try {
+      const commodity = await this.commodityService.createCommodity(req.body);
+      res.status(201).json(commodity);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+}

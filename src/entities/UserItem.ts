@@ -1,8 +1,8 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryColumn, JoinColumn  } from 'typeorm';
 import { User } from './User';
 import { Item } from './Item';
 
-@Entity({ name: 'UserItems' })
+@Entity('UserItems')
 export class UserItem {
   @PrimaryColumn()
   userId: string;
@@ -10,18 +10,20 @@ export class UserItem {
   @PrimaryColumn()
   itemId: string;
 
-  @Column({ type: 'int' })
-  quantity: number;
-
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdTime: Date;
-
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-  updatedTime: Date;
-
-  @ManyToOne(() => User, (user) => user.userItems)
+  @ManyToOne(() => User, user => user.userItems, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user: User;
 
-  @ManyToOne(() => Item, (item) => item.userItems)
+  @ManyToOne(() => Item, item => item.userItems, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'itemId' })
   item: Item;
+
+  @Column()
+  quantity: number;
+
+  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+  createdTime: Date;
+
+  @Column({ default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedTime: Date;
 }

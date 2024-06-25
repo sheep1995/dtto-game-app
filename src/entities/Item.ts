@@ -1,29 +1,29 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UserItem } from './UserItem';
 
-@Entity({ name: 'Items' })
+@Entity('Items')
 export class Item {
   @PrimaryGeneratedColumn()
   itemId: string;
 
-  @Column({ type: 'varchar' })
+  @Column()
   itemName: string;
 
-  @Column({ type: 'varchar' })
+  @Column()
   itemType: string;
 
-  @Column({ type: 'json', nullable: true })
+  @Column('json')
   itemAttributes: any;
 
-  @Column({ type: 'text', nullable: true })
+  @Column('text')
   itemDescription: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @OneToMany(() => UserItem, userItem => userItem.item)
+  userItems: UserItem[];
+
+  @Column({ default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({ default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedTime: Date;
-
-  @OneToMany(() => UserItem, (userItem) => userItem.item)
-  userItems: UserItem[];
 }

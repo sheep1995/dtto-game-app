@@ -9,7 +9,7 @@ const uId = (field: any) => {
         )
         .trim()
         .escape()
-        .isLength({ min: 8 })
+        .isLength({ min: 5 })
         .withMessage(
             `should not be empty and at a minimum eight characters.`
         )

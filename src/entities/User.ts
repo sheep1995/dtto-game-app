@@ -1,33 +1,32 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { CharacterLevel } from './CharacterLevel';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UserItem } from './UserItem';
 
-@Entity({ name: 'Users' })
+@Entity('Users')
 export class User {
   @PrimaryGeneratedColumn()
   uId: number;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ unique: true })
   userId: string;
 
-  @Column({ type: 'varchar' })
+  @Column()
   username: string;
 
-  @Column({ type: 'varchar', unique: true })
+  @Column({ unique: true })
   email: string;
 
-  @Column({ type: 'varchar', nullable: true })
+  @Column({ nullable: true })
   avatar: string;
 
-  @ManyToOne(() => CharacterLevel, (characterLevel) => characterLevel.users)
-  characterLevel: CharacterLevel;
+  @Column()
+  characterLevel: number;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @OneToMany(() => UserItem, userItem => userItem.user)
+  userItems: UserItem[];
+
+  @Column({ default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @Column({ default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
   updatedTime: Date;
-
-  @OneToMany(() => UserItem, (userItem) => userItem.user)
-  userItems: UserItem[];
 }

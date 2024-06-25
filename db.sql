@@ -178,3 +178,49 @@ LIMIT
 CREATE INDEX index_userId ON Scores_Normal (userId);
 CREATE INDEX index_createTime ON Scores_Normal (createTime);
 DROP INDEX index_userId ON Scores_Normal;
+
+
+/*06/25*/
+INSERT INTO Items (itemId, itemName, itemType, itemAttributes, itemDescription)
+VALUES (
+  'combine1', 
+  'combineItem1', 
+  'CombineItem', 
+  '{"level": 1}', 
+  'A combine item of level 1'
+),
+(
+  'combine2', 
+  'combineItem2', 
+  'CombineItem', 
+  '{"level": 2}', 
+  'A combine item of level 2'
+),
+(
+  'combine3', 
+  'combineItem3', 
+  'CombineItem', 
+  '{"level": 3}', 
+  'A combine item of level 3'
+),
+(
+  'combine4', 
+  'combineItem4', 
+  'CombineItem', 
+  '{"level": 4}', 
+  'A combine item of level 4'
+),
+(
+  'combine5', 
+  'combineItem5', 
+  'CombineItem', 
+  '{"level": 5}', 
+  'A combine item of level 5'
+)
+,(
+  'egg1', 
+  'Character Egg 1', 
+  'CharacterEgg', 
+  '{"items": [{"itemId": "combine1", "quantity": 10}, {"itemId": "combine2", "quantity": 5}]}', 
+  'A special egg that hatches into multiple combine items'
+);

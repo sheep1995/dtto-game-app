@@ -4,7 +4,7 @@ import { UserItem } from './UserItem';
 @Entity('Users')
 export class User {
   @PrimaryGeneratedColumn()
-  uId: number;
+  uId: string;
 
   @Column({ unique: true })
   userId: string;
@@ -17,6 +17,9 @@ export class User {
 
   @Column({ nullable: true })
   avatar: string;
+
+  @Column({ default: 0 })
+  coin: number;
 
   @Column()
   characterLevel: number;

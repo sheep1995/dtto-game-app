@@ -224,3 +224,31 @@ VALUES (
   '{"items": [{"itemId": "combine1", "quantity": 10}, {"itemId": "combine2", "quantity": 5}]}', 
   'A special egg that hatches into multiple combine items'
 );
+
+
+
+INSERT INTO items (itemId, itemName, itemType, itemAttributes, itemDescription)
+VALUES
+('commodity_currency_1', '500 Coins', 'commodity_currency', '{"coinAmount": 500, "price": 100}', 'Buy 500 coins for $100'),
+('commodity_currency_2', '1500 Coins', 'commodity_currency', '{"coinAmount": 1500, "price": 250}', 'Buy 1500 coins for $250'),
+('commodity_currency_3', '3000 Coins', 'commodity_currency', '{"coinAmount": 3000, "price": 450}', 'Buy 3000 coins for $450'),
+
+('commodity_1', 'Starter Pack', 'commodity', '{"contents": [{"itemId": "character_egg_1", "quantity": 5}, {"itemId": "character_egg_2", "quantity": 1}], "priceInCoins": 1500}', 'A starter pack with character eggs'),
+('commodity_2', 'Adventure Pack', 'commodity', '{"contents": [{"itemId": "decoration_1", "quantity": 2}, {"itemId": "decoration_2", "quantity": 1}], "priceInCoins": 2000}', 'An adventure pack with game items and a decoration'),
+('commodity_3', 'Battle Pack', 'commodity', '{"contents": [{"itemId": "game_item_1", "quantity": 3}, {"itemId": "game_item_2", "quantity": 2}], "priceInCoins": 2500}', 'A battle pack essential for fighting enemies'),
+
+('game_item_1', 'Invisibility Cloak', 'game_item', '{"skill": "invisibility"}', 'Makes the player invisible for a short time'),
+('game_item_2', 'Fire Sword', 'game_item', '{"skill": "fire"}', 'Engulfs enemies in flames upon contact'),
+('game_item_3', 'Ice Wand', 'game_item', '{"skill": "freeze"}', 'Freezes enemies for five seconds'),
+
+('decoration_1', 'Hipster Glasses', 'decoration', '{"part": "eyes"}', 'Stylish retro glasses to stand out in the crowd'),
+('decoration_2', 'Warrior Helmet', 'decoration', '{"part": "head"}', 'A helmet that provides protection and style'),
+('decoration_3', 'Magic Cape', 'decoration', '{"part": "back"}', 'A cape that billows mysteriously in the wind'),
+
+('character_egg_1', 'Mystery Egg', 'character_egg', '{"contents": [{"itemId": "combine_item_1", "quantity": 3}, {"itemId": "combine_item_2", "quantity": 2}], "hatchTime": "24 hours"}', 'Hatch to find out what is inside!'),
+('character_egg_2', 'Dragon Egg', 'character_egg', '{"contents": [{"itemId": "combine_item_1", "quantity": 1}, {"itemId": "combine_item_3", "quantity": 1}], "hatchTime": "48 hours"}', 'Hatch a dragon to aid in your quests'),
+('character_egg_3', 'Fairy Egg', 'character_egg', '{"contents": [{"itemId": "combine_item_2", "quantity": 2}], "hatchTime": "12 hours"}', 'Discover a fairy companion from this egg'),
+
+('combine_item_1', 'Magic Stone Level 1', 'combine_item', '{"level": 1, "requiredQuantity": 2}', 'Combine two to get a higher level stone'),
+('combine_item_2', 'Magic Stone Level 2', 'combine_item', '{"level": 2, "requiredQuantity": 2}', 'Combine two to reach the next level'),
+('combine_item_3', 'Magic Stone Level 3', 'combine_item', '{"level": 3, "requiredQuantity": 2}', 'Combine two to achieve the ultimate power stone');

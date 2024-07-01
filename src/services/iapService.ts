@@ -1,7 +1,7 @@
 import iap from 'in-app-purchase';
 import pool from '../database';
 
-const setupIAP = async (platform: string) => {
+export const setupIAP = async (platform: string) => {
     const config: any = {
         test: false,
         verbose: false
@@ -21,11 +21,11 @@ const setupIAP = async (platform: string) => {
     await iap.setup();
 };
 
-const getReceipt = (platform: string, packageName: string, commodityId: string, purchaseToken: string) => {
+export const getReceipt = (platform: string, packageName: string, commodityId: string, purchaseToken: string) => {
     if (platform === 'android') {
         return {
             packageName,
-            productId: commodityId,
+            productId: 'com.wistronent.game.star.coins.600',//commodityId,
             purchaseToken,
             subscription: false
         };
@@ -34,7 +34,8 @@ const getReceipt = (platform: string, packageName: string, commodityId: string, 
     }
 };
 
-const validateReceipt = async (platform: string, receipt: any, commodityId: string) => {
+export const validateReceipt = async (platform: string, receipt: any, commodityId: string) => {
+    console.log('platform', platform)
     const validationResponse = await iap.validate(receipt);
     console.log('validationResponse', JSON.stringify(validationResponse));
 
@@ -81,14 +82,8 @@ const validateReceipt = async (platform: string, receipt: any, commodityId: stri
     return { errorMessage, orderId };
 };
 
-const getThePurchase = async (orderId: string) => {
+export const getThePurchase = async (orderId: string) => {
     const query = `SELECT COUNT(*) AS count FROM Purchases WHERE transactionId = ?`;
     const [rows] = await pool.query(query, [orderId]);
     return rows[0].count > 0;
-};
-
-export default {
-    setupIAP,
-    getReceipt,
-    validateReceipt,
 };

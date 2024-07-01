@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+/*import { Request, Response } from 'express';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import iapService from '../services/iapService';
@@ -12,34 +12,82 @@ export function getDateWithOffset(offset: number = 0, timezone: string = 'Asia/T
     return formattedDate;
 }
 
-// export const purchaseHandler = async (req: Request, res: Response) => {
-//     try {
-//         const now = getDateWithOffset();
-//         const { userId } = req.user;
-//         const { commodityId, platform, purchaseToken } = req.body;
+export const purchaseHandler = async (req: Request, res: Response) => {
+    try {
+        const now = getDateWithOffset();
+        const { userId } = req.user;
+        const { commodityId, platform, purchaseToken } = req.body;
 
-//         if (!commodityId || !platform) {
-//             return res.status(400).json({ status: 'error', message: '參數漏填' });
-//         }
+        if (!commodityId || !platform) {
+            return res.status(400).json({ status: 'error', message: '參數漏填' });
+        }
 
-//         const { starCount, raiseCount, price } = getCommodityList(platform, commodityId);
-//         const totalGameCoin = starCount + raiseCount;
+        const { starCount, raiseCount, price } = getCommodityList(platform, commodityId);
+        const totalGameCoin = starCount + raiseCount;
 
-//         const receipt = iapService.getReceipt(platform, process.env.PACKAGE_NAME, commodityId, purchaseToken);
-//         await iapService.setupIAP(platform);
+        const receipt = iapService.getReceipt(platform, process.env.PACKAGE_NAME, commodityId, purchaseToken);
+        await iapService.setupIAP(platform);
 
-//         const { errorMessage, orderId } = await iapService.validateReceipt(platform, receipt, commodityId);
+        const { errorMessage, orderId } = await iapService.validateReceipt(platform, receipt, commodityId);
 
-//         if (errorMessage) {
-//             await logPurchaseError(userId, now, commodityId, errorMessage);
-//             throw new Error(errorMessage);
-//         }
+        if (errorMessage) {
+            await logPurchaseError(userId, now, commodityId, errorMessage);
+            throw new Error(errorMessage);
+        }
 
-//         await executeTransaction({ userId, now, commodityId, totalGameCoin, price, purchaseToken, orderId });
+        await executeTransaction({ userId, now, commodityId, totalGameCoin, price, purchaseToken, orderId });
 
-//         return res.status(200).json({ status: 'success', message: '購買成功' });
-//     } catch (e) {
-//         console.error('Error:', e);
-//         return res.status(500).json({ status: 'error', message: '操作失敗' });
-//     }
-// };
+        return res.status(200).json({ status: 'success', message: '購買成功' });
+    } catch (e) {
+        console.error('Error:', e);
+        return res.status(500).json({ status: 'error', message: '操作失敗' });
+    }
+};*/
+
+
+import { Request, Response } from 'express';
+import { UserService } from '../services/UserService';
+import { ItemService } from '../services/ItemService';
+import { UserItemService } from '../services/UserItemService';
+import { setupIAP, getReceipt, validateReceipt } from "../services/iapService";
+
+export const handlePurchase = async (req: Request, res: Response): Promise<void> => {
+    const { itemId, platform, purchaseToken } = req.body;
+    const { userId } = req.user;
+
+    try {
+        const user = await UserService.getUserById(userId);
+        const item = await ItemService.getItemById(itemId);
+
+        if (!user || !item) {
+            res.status(404).send('User or item not found.');
+            return;
+        }
+
+        const receipt = getReceipt(platform, process.env.PACKAGE_NAME, itemId, purchaseToken);
+        await setupIAP(platform);
+
+        const isValid = await validateReceipt(platform, receipt, itemId);
+        if (!isValid.errorMessage) {
+            res.status(400).send('Invalid purchase receipt.');
+            return;
+        }
+
+        console.debug('price', item);
+
+        const totalCost = item.itemAttributes.price;
+        if (user.coin < totalCost) {
+            res.status(400).send('Insufficient coin.');
+            return;
+        }
+
+        await UserService.updateUserCoin(userId, -totalCost);
+        await UserItemService.addItemToUser(userId, itemId, 1);
+
+        res.send('Purchase successful.');
+    } catch (error) {
+        console.error('Purchase handling failed:', error);
+        res.status(500).send('Internal server error.');
+    }
+};
+

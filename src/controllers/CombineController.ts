@@ -9,7 +9,8 @@ export class CombineController {
   }
 
   hatchEgg = async (req: Request, res: Response) => {
-    const { userId, itemId } = req.body;
+    const { userId } = req.user;
+    const { itemId } = req.params;
 
     try {
       const result = await this.combineService.hatchEgg(userId, itemId);
@@ -26,7 +27,8 @@ export class CombineController {
   };
 
   addCharacterEgg = async (req: Request, res: Response) => {
-    const { userId, itemId, quantity } = req.body;
+    const { userId } = req.user;
+    const { itemId, quantity } = req.body;
 
     try {
       const result = await this.combineService.addCharacterEgg(userId, itemId, quantity);
@@ -43,7 +45,7 @@ export class CombineController {
   };
 
   getCharacterEggs = async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const { userId } = req.user;
 
     try {
       const characterEggs = await this.combineService.getCharacterEggs(userId);
@@ -55,7 +57,7 @@ export class CombineController {
   };
 
   getCombineItems = async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    const { userId } = req.user;
 
     try {
       const combineItems = await this.combineService.getCombineItems(userId);
@@ -66,21 +68,21 @@ export class CombineController {
     }
   };
 
-combineItems = async (req: Request, res: Response) => {
-  const { userId } = req.user;
-  const { itemId } = req.body;
+  combineItems = async (req: Request, res: Response) => {
+    const { userId } = req.user;
+    const { itemId } = req.body;
 
-  try {
-    const result = await this.combineService.combineItems(userId, itemId);
+    try {
+      const result = await this.combineService.combineItems(userId, itemId);
 
-    if (!result.success) {
-      return res.status(400).json(result);
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+
+      return res.json(result);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ success: false, message: 'Internal server error' });
     }
-
-    return res.json(result);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-};
+  };
 }

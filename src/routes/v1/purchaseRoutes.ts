@@ -1,19 +1,10 @@
-// import { Router } from 'express';
-// import { purchaseHandler } from '../../controllers/purchaseController';
-
-// const _router: Router = Router({
-//     mergeParams: true,
-// });
-
-// _router.post('/', purchaseHandler);
-
-// export const router = _router;
-
 import { Router } from 'express';
-import { purchaseProduct } from '../../controllers/PurchaseControllerTest';
+import { handlePurchase } from '../../controllers/PurchaseController';
 
-const _router = Router();
+const _router: Router = Router({
+    mergeParams: true,
+});
 
-_router.post('/', purchaseProduct);
+_router.post('/', handlePurchase);
 
 export const router = _router;

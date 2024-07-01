@@ -6,7 +6,7 @@ import User from '../models/User';
 // 定义 authenticate 函数的类型声明
 type AuthenticateFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
-const pathsNoRequiringAuth = ['/api/v1/user/login',]; // 不需要 JWT 驗證的 paths
+const pathsNoRequiringAuth = ['/v1/user/login']; // 不需要 JWT 驗證的 paths
 // authenticate 函数
 const authenticate: AuthenticateFunction = async (req, res, next) => {
     try {

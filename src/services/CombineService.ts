@@ -82,11 +82,12 @@ export class CombineService {
   }
 
   async addCharacterEgg(userId: string, itemId: string, quantity: number) {
+    console.error('itemId', itemId);
     return await AppDataSource.transaction(async (transactionalEntityManager) => {
       let userItem = await transactionalEntityManager.findOne(UserItem, {
         where: { userId, itemId },
       });
-
+      console.log('userItem', userItem);
       if (userItem) {
         userItem.quantity += quantity;
       } else {

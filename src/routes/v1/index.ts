@@ -4,7 +4,8 @@ import { router as ScoreRoutes } from './scoreRoutes';
 import { router as AdRoutes } from './adRoutes';
 import { router as PurchaseRoutes } from './purchaseRoutes';
 import { router as CommodityRoutes  } from './commodityRoutes';
-import { router as CharacterRoutes  } from './characterRoutes';
+import { router as CharacterEggsRoutes  } from './characterEggsRoutes';
+import { router as CombineItemsRoutes  } from './combineItemsRoutes';
 
 const _router: Router = Router({
     mergeParams: true,
@@ -28,6 +29,7 @@ _router.use('/v1/scores', ScoreRoutes);
 _router.use('/v1/ads', AdRoutes);
 _router.use('/v1/purchase', PurchaseRoutes);
 _router.use('/v1/commodities', CommodityRoutes);
-_router.use('/v1/character', CharacterRoutes);
+_router.use('/v1/character-eggs', CharacterEggsRoutes);
+_router.use('/v1/combine-items', CombineItemsRoutes);
 
 export const router = _router;

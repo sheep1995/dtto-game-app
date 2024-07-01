@@ -2,9 +2,8 @@ import { Router } from 'express';
 import { CommodityController } from '../../controllers/CommodityController';
 
 const _router = Router();
-const commodityController = new CommodityController();
 
-_router.get('/', (req, res) => commodityController.getAllCommodities(req, res));
-_router.post('/', (req, res) => commodityController.createCommodity(req, res));
+_router.get('/', (req, res) => CommodityController.getAllCommodities(req, res));
+_router.get('/currency', (req, res) => CommodityController.getAllCurrencyCommodities(req, res));
 
 export const router = _router;

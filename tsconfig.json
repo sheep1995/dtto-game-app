@@ -11,6 +11,7 @@
     "declaration": true,
     "strict": false, // 啟用嚴格模式
     "skipLibCheck": true, //跳過 node_modules 中的類型檢查
+    "resolveJsonModule": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src",

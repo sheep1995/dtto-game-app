@@ -2,7 +2,6 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { router as UserRouter } from './userRoutes';
 import { router as ScoreRoutes } from './scoreRoutes';
 import { router as AdRoutes } from './adRoutes';
-import { router as PurchaseRoutes } from './purchaseRoutes';
 import { router as CommodityRoutes  } from './commodityRoutes';
 import { router as CharacterEggsRoutes  } from './characterEggsRoutes';
 import { router as CombineItemsRoutes  } from './combineItemsRoutes';
@@ -27,7 +26,6 @@ _router.route('/v1/health-check').get(function (req: Request, res: Response) {
 _router.use('/v1/user', UserRouter);
 _router.use('/v1/scores', ScoreRoutes);
 _router.use('/v1/ads', AdRoutes);
-_router.use('/v1/purchase', PurchaseRoutes);
 _router.use('/v1/commodities', CommodityRoutes);
 _router.use('/v1/character-eggs', CharacterEggsRoutes);
 _router.use('/v1/combine-items', CombineItemsRoutes);

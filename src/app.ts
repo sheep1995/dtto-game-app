@@ -11,6 +11,7 @@ class App {
 		this.app = express();
 		this.config();
 		this.routes();
+		this.errorHandling();
 	}
 
 	private config(): void {
@@ -41,6 +42,26 @@ class App {
 	private routes(): void {
 		this.app.use('/api', v1);
 	}
+
+	private errorHandling(): void {
+        // Catch 404 and forward to error handler
+        this.app.use((req: Request, res: Response, next: NextFunction) => {
+            const error = new Error('Not Found');
+            res.status(404).json({
+                message: error.message,
+                status: 404
+            });
+        });
+
+        // Error handler
+        this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+            const status = err.status || 500;
+            res.status(status).json({
+                message: err.message,
+                status: status
+            });
+        });
+    }
 }
 
 export default new App().app;

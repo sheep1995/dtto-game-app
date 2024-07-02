@@ -1,57 +1,10 @@
 /*import { Request, Response } from 'express';
-import { format } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
-import iapService from '../services/iapService';
-import { logPurchaseError, executeTransaction } from '../models/purchaseModel';
-//import getCommodityList from '../services/CommodityService';
-
-export function getDateWithOffset(offset: number = 0, timezone: string = 'Asia/Taipei'): string {
-    const date = new Date();
-    const zonedDate = toZonedTime(date, timezone);
-    const formattedDate = format(zonedDate, 'yyyy/MM/dd HH:mm:ss');
-    return formattedDate;
-}
-
-export const purchaseHandler = async (req: Request, res: Response) => {
-    try {
-        const now = getDateWithOffset();
-        const { userId } = req.user;
-        const { commodityId, platform, purchaseToken } = req.body;
-
-        if (!commodityId || !platform) {
-            return res.status(400).json({ status: 'error', message: '參數漏填' });
-        }
-
-        const { starCount, raiseCount, price } = getCommodityList(platform, commodityId);
-        const totalGameCoin = starCount + raiseCount;
-
-        const receipt = iapService.getReceipt(platform, process.env.PACKAGE_NAME, commodityId, purchaseToken);
-        await iapService.setupIAP(platform);
-
-        const { errorMessage, orderId } = await iapService.validateReceipt(platform, receipt, commodityId);
-
-        if (errorMessage) {
-            await logPurchaseError(userId, now, commodityId, errorMessage);
-            throw new Error(errorMessage);
-        }
-
-        await executeTransaction({ userId, now, commodityId, totalGameCoin, price, purchaseToken, orderId });
-
-        return res.status(200).json({ status: 'success', message: '購買成功' });
-    } catch (e) {
-        console.error('Error:', e);
-        return res.status(500).json({ status: 'error', message: '操作失敗' });
-    }
-};*/
-
-
-import { Request, Response } from 'express';
 import { UserService } from '../services/UserService';
 import { ItemService } from '../services/ItemService';
-import { UserItemService } from '../services/UserItemService';
+import { PurchaseService } from '../services/PurchaseService';
 import { setupIAP, getReceipt, validateReceipt } from "../services/iapService";
 
-export const handlePurchase = async (req: Request, res: Response): Promise<void> => {
+export const handleCurrencyPurchase = async (req: Request, res: Response): Promise<void> => {
     const { itemId, platform, purchaseToken } = req.body;
     const { userId } = req.user;
 
@@ -75,14 +28,9 @@ export const handlePurchase = async (req: Request, res: Response): Promise<void>
 
         console.debug('price', item);
 
-        const totalCost = item.itemAttributes.price;
-        if (user.coin < totalCost) {
-            res.status(400).send('Insufficient coin.');
-            return;
-        }
+        const coinAmount = item.itemAttributes.coinAmount;
 
-        await UserService.updateUserCoin(userId, -totalCost);
-        await UserItemService.addItemToUser(userId, itemId, 1);
+        await UserService.updateUserCoin(userId, coinAmount);
 
         res.send('Purchase successful.');
     } catch (error) {
@@ -91,3 +39,65 @@ export const handlePurchase = async (req: Request, res: Response): Promise<void>
     }
 };
 
+export const handlePurchase = async (req: Request, res: Response): Promise<void> => {
+    const { itemId } = req.body;
+    const { userId } = req.user;
+
+    try {
+        const user = await UserService.getUserById(userId);
+        const item = await ItemService.getItemById(itemId);
+
+        if (!user || !item) {
+            res.status(404).send('User or item not found.');
+            return;
+        }
+
+        const totalCost = item.itemAttributes.price;
+
+        await PurchaseService.processPurchase(userId, itemId, totalCost, item.itemAttributes.contents);
+
+        res.send('Purchase successful.');
+    } catch (error) {
+        console.error('Purchase handling failed:', error);
+        res.status(500).send('Internal server error.');
+    }
+};*/
+
+// purchase-controller.ts
+import { Request, Response } from 'express';
+import { UserService } from '../services/UserService';
+import { ItemService } from '../services/ItemService';
+import { IPurchaseStrategy, CurrencyPurchaseStrategy, ItemPurchaseStrategy } from '../strategies/PurchaseStrategy';
+
+const strategies: { [key: string]: IPurchaseStrategy } = {
+    currency: new CurrencyPurchaseStrategy(),
+    item: new ItemPurchaseStrategy()
+};
+
+export class PurchaseController {
+    static handlePurchase = async (req: Request, res: Response): Promise<void> => {
+        const { itemId, } = req.body;
+        const purchaseType = req.query.purchaseType as string;
+        const { userId } = req.user;
+
+        try {
+            const item = await ItemService.getItemById(itemId);
+            const user = await UserService.getUserById(userId);
+            if (!item || !user) {
+                res.status(404).send('User or item not found.');
+                return;
+            }
+
+            const strategy = strategies[purchaseType];
+            if (!strategy) {
+                res.status(400).send('Invalid purchase type.');
+                return;
+            }
+
+            await strategy.execute(userId, item, { platform: req.body.platform, purchaseToken: req.body.purchaseToken, userCoin: user.coin }, res);
+        } catch (error) {
+            console.error('Purchase handling failed:', error);
+            res.status(500).send('Internal server error.');
+        }
+    }
+}

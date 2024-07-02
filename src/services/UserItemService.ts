@@ -1,23 +1,31 @@
 import { AppDataSource } from '../config/data-source';
 import { UserItem } from '../entities/UserItem';
+import { EntityManager } from "typeorm";
 
 export class UserItemService {
-    static async addItemToUser(userId: string, itemId: string, quantity: number): Promise<void> {
-        console.debug('addItemToUser', userId);
-        const userItem = await AppDataSource.manager.findOne(UserItem, {
+    static async addItemToUser(
+        userId: string,
+        itemId: string,
+        quantity: number,
+        entityManager?: EntityManager
+    ): Promise<void> {
+        const transactionManager = entityManager || AppDataSource.manager;
+
+        // Find existing userItem or create a new one
+        const userItem = await transactionManager.findOne(UserItem, {
             where: { userId, itemId }
         });
 
         if (userItem) {
             userItem.quantity += quantity;
-            await AppDataSource.manager.save(userItem);
+            await transactionManager.save(userItem);
         } else {
-            const newUserItem = AppDataSource.manager.create(UserItem, {
+            const newUserItem = transactionManager.create(UserItem, {
                 userId,
                 itemId,
                 quantity
             });
-            await AppDataSource.manager.save(newUserItem);
+            await transactionManager.save(newUserItem);
         }
     }
 }

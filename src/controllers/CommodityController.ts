@@ -4,7 +4,7 @@ import { Item } from "../entities/Item";
 
 export class CommodityController {
 
-	static getAllCommodities = async (req: Request, res: Response) => {
+	static async getAllCommodities (req: Request, res: Response) {
         const itemRepository = AppDataSource.getRepository(Item);
         const currencyItems = await itemRepository.find({
             where: {
@@ -25,7 +25,7 @@ export class CommodityController {
         res.send(formattedItems);
     };
 
-	static getAllCurrencyCommodities = async (req: Request, res: Response) => {
+	static async getAllCurrencyCommodities (req: Request, res: Response) {
         const itemRepository = AppDataSource.getRepository(Item);
         const currencyItems = await itemRepository.find({
             where: {

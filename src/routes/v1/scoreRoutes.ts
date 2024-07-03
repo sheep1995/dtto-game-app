@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { scoreController } from '../../controllers';
+import { ScoreController } from '../../controllers/ScoreController';
 import authMiddleware from '../../middlewares/auth';
 import validate from '../../middlewares/valiadationMiddleware';
 import { gameModeOfBody, gameModeOfQuery, playTimeMs, score, period } from '../../validators/scoreValidator';
@@ -23,5 +24,9 @@ _router.get('/top-players', validate([
 _router.get('/ranking', validate([
     gameModeOfQuery('gameMode'), period('period')
 ]), authMiddleware, scoreController.getRanking);
+
+_router.post('/', ScoreController.recordScore);
+
+_router.use('/leaderboard', ScoreController.getLeaderboard);
 
 export const router = _router;

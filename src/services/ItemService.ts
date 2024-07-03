@@ -5,4 +5,5 @@ export class ItemService {
     static async getItemById(itemId: string): Promise<Item | undefined> {
         return AppDataSource.manager.findOne(Item, { where: { itemId } });
     }
+
 }

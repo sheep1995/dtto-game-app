@@ -12,11 +12,17 @@ export class User {
   @Column({ unique: true })
   userId: string;
 
-  @Column()
+  @Column({ unique: true })
+  token: string;
+
+  @Column({ nullable: true })
   username: string;
 
   @Column({ unique: true })
   email: string;
+
+  @Column()
+  loginType: string;
 
   @Column({ nullable: true })
   avatar: string;
@@ -24,7 +30,7 @@ export class User {
   @Column({ default: 0 })
   coin: number;
 
-  @Column()
+  @Column({ default: 0 })
   characterLevel: number;
 
   @OneToMany(() => UserItem, userItem => userItem.user)

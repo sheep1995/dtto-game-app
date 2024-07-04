@@ -1,9 +1,9 @@
 import { Request, Response, Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { userController } from '../../controllers';
+import { UserController } from '../../controllers/UserController';
 import authMiddleware from '../../middlewares/auth';
 import validate from '../../middlewares/valiadationMiddleware';
-import { loginType, uId } from '../../validators/userValidator';
+import { loginType, uId, validateUserUpdate } from '../../validators/userValidator';
 
 const _router: Router = Router({
     mergeParams: true,
@@ -66,7 +66,7 @@ const _router: Router = Router({
  *       500:
  *         description: Internal server error. Something went wrong on the server side.
  */
-_router.route('/login').post(validate([uId('uId'), loginType('loginType')]), userController.login)
+_router.route('/login').post(validate([uId('uId'), loginType('loginType')]), UserController.login)
 
 /**
  * @swagger
@@ -94,6 +94,14 @@ _router.route('/login').post(validate([uId('uId'), loginType('loginType')]), use
  *       500:
  *         description: Internal server error. Something went wrong on the server side.
  */
-_router.post('/refreshToken', authMiddleware, userController.refreshToken);
+_router.post('/refreshToken', authMiddleware, UserController.refreshToken);
+
+_router.patch('/', validateUserUpdate, (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+}, UserController.updateUser);
 
 export const router = _router;

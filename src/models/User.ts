@@ -2,7 +2,7 @@
 interface User {
     uId: string;
     userId: string;
-    loginType: number;
+    loginType: string;
 }
 
 export default User;

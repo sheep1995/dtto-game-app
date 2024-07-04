@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import config from '../config';
-import UserModel from '../models/UserModel';
+import { UserService } from '../services/UserService';
 import User from '../models/User';
 // 定义 authenticate 函数的类型声明
 type AuthenticateFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
@@ -25,8 +25,7 @@ const authenticate: AuthenticateFunction = async (req, res, next) => {
 
         const { uId, userId, loginType } = jwt.verify(token, config.JWT_SECRET) as User;
 
-        const userModel = new UserModel();
-        const user = await userModel.getUser(uId);
+        const user = await UserService.getUserByuuId(uId);
 
         // Check if user exists and if the userId and loginType match the decoded token
         if (!user || user.userId !== userId || user.loginType !== loginType) {

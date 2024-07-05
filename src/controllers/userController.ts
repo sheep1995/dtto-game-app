@@ -5,23 +5,35 @@ import config from '../config';
 import { generateUserId } from '../utils/generateUserId';
 import { generateToken } from '../utils/generateToken';
 
+import multer from 'multer';
+import MulterGoogleCloudStorage from 'multer-cloud-storage';
+
+const storage = new MulterGoogleCloudStorage({
+    keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+    bucket: 'toptok-8bcfc.appspot.com',
+    projectId: 'toptok-8bcfc',
+    acl: 'publicRead'  // 设置文件上传后是公开读取的
+});
+
+export const upload = multer({ storage });
+
 export class UserController {
     static async login(req: Request, res: Response): Promise<void> {
         const { uId, loginType, email } = req.body;
-    
+
         try {
             const user = await UserService.getUserByuuId(uId);
-    
+
             if (!user) {
                 const userId = generateUserId();
                 const token = generateToken(uId, userId, loginType);
-    
+
                 await UserService.addUser(uId, userId, token, email, loginType);
                 res.json({ userId, token });
             } else {
                 const { uId, userId, loginType } = user;
                 const newToken = generateToken(uId, userId, loginType);
-    
+
                 await UserService.updateUserToken(uId, newToken);
                 res.json({ userId, token: newToken });
             }
@@ -33,12 +45,12 @@ export class UserController {
 
     static async refreshToken(req: Request, res: Response): Promise<void> {
         const token: string = req.headers.authorization!;
-    
+
         try {
             const { uId, userId, loginType } = jwt.verify(token, config.JWT_SECRET) as { uId: string; userId: string; loginType: string };
-    
+
             const newToken = generateToken(uId, userId, loginType);
-    
+
             await UserService.updateUserToken(uId, newToken);
             res.json({ userId, token: newToken });
         } catch (error) {
@@ -58,6 +70,16 @@ export class UserController {
             console.error('Error updating user:', error);
             res.status(500).send('Internal server error.');
         }
+    }
+
+    static uploadAvatar(req: Request, res: Response) {
+        if (!req.file) {
+            return res.status(400).send('No file uploaded.');
+        }
+        res.status(200).json({
+            message: 'File uploaded successfully.',
+            imageUrl: req.file.cloudStoragePublicUrl
+        });
     }
 
 }

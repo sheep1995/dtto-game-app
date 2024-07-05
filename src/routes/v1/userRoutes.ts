@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { body, validationResult } from 'express-validator';
-import { UserController } from '../../controllers/UserController';
+import { UserController, upload } from '../../controllers/UserController';
 import authMiddleware from '../../middlewares/auth';
 import validate from '../../middlewares/valiadationMiddleware';
 import { loginType, uId, validateUserUpdate } from '../../validators/userValidator';
@@ -103,5 +103,7 @@ _router.patch('/', validateUserUpdate, (req, res, next) => {
     }
     next();
 }, UserController.updateUser);
+
+_router.post('/avatar', upload.single('avatar'), UserController.uploadAvatar);
 
 export const router = _router;

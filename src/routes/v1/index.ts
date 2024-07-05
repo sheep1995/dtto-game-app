@@ -24,7 +24,7 @@ _router.route('/v1/health-check').get(function (req: Request, res: Response) {
 });
 
 //EXPORT ROUTES WITH BASEPATH
-_router.use('/v1/user', UserRouter);
+_router.use('/v1/users', UserRouter);
 _router.use('/v1/scores', ScoreRoutes);
 _router.use('/v1/ads', AdRoutes);
 _router.use('/v1/commodities', CommodityRoutes);

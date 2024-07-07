@@ -1,21 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserService } from '../services/UserService';
+import { AdminService } from '../services/AdminService';
 
-interface User {
-    uId: string;
-    userId: string;
-    loginType: string;
+interface Staff {
+    id: string;
+    username: string
 }
 
 type AuthenticateFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
-const pathsNoRequiringAuth = ['/v1/users/login']; // 不需要 JWT 驗證的 paths
+const pathsNoRequiringAuth = ['/users/register', '/users/login']; // 不需要 JWT 驗證的 paths
 // authenticate 函数
 const authenticate: AuthenticateFunction = async (req, res, next) => {
     try {
         // Get the token from the request headers
         const token = req.headers.authorization;
+        
         const noRequiresAuth = pathsNoRequiringAuth.some(path => req.path.startsWith(path));
 
         if (noRequiresAuth) {
@@ -27,17 +27,17 @@ const authenticate: AuthenticateFunction = async (req, res, next) => {
             return;
         }
 
-        const { uId, userId, loginType } = jwt.verify(token, process.env.JWT_SECRET) as User;
+        const { id } = jwt.verify(token, process.env.JWT_SECRET) as Staff;
 
-        const user = await UserService.getUserByuuId(uId);
+        const staff = await AdminService.getStaffById(id);
 
         // Check if user exists and if the userId and loginType match the decoded token
-        if (!user || user.userId !== userId || user.loginType !== loginType) {
+        if (!staff ) {
             res.status(401).json({ error: 'Unauthorized: Invalid user' });
             return;
         }
 
-        req.user = user;
+        req.staff = staff;
 
         // Attach the decoded user information to the request object for use in subsequent middleware or route handlers
 

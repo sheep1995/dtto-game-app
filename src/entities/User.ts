@@ -3,6 +3,7 @@ import { UserItem } from './UserItem';
 import { GameMode2000Score } from './GameMode2000Score';
 import { GameModeLimitedTimeScore } from './GameModeLimitedTimeScore';
 import { GameModeNormalScore } from './GameModeNormalScore';
+import { Transaction } from './Transaction';
 
 @Entity('Users')
 export class User {
@@ -50,4 +51,7 @@ export class User {
 
   @OneToMany(() => GameModeNormalScore, score => score.user)
   scoresNormal: GameModeNormalScore[];
+
+  @OneToMany(() => Transaction, transaction => transaction.user)
+  transactions: Transaction[];
 }

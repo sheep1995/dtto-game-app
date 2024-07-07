@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserService } from '../services/UserService';
-import config from '../config';
 import { generateUserId } from '../utils/generateUserId';
 import { generateToken } from '../utils/generateToken';
 
@@ -23,7 +22,7 @@ export class UserController {
 
         try {
             const user = await UserService.getUserByuuId(uId);
-
+            console.debug('user', user);
             if (!user) {
                 const userId = generateUserId();
                 const token = generateToken(uId, userId, loginType);
@@ -47,7 +46,7 @@ export class UserController {
         const token: string = req.headers.authorization!;
 
         try {
-            const { uId, userId, loginType } = jwt.verify(token, config.JWT_SECRET) as { uId: string; userId: string; loginType: string };
+            const { uId, userId, loginType } = jwt.verify(token, process.env.JWT_SECRET) as { uId: string; userId: string; loginType: string };
 
             const newToken = generateToken(uId, userId, loginType);
 

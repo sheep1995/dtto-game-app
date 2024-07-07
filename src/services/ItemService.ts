@@ -6,4 +6,17 @@ export class ItemService {
         return AppDataSource.manager.findOne(Item, { where: { itemId } });
     }
 
+    static async getItemBySerialNumber(serialNumber: string): Promise<Item | null> {
+        const itemRepository = AppDataSource.getRepository(Item);
+
+        const item = await itemRepository.findOne({
+            where: {
+                itemId: serialNumber,
+                itemType: 'voucher',
+            },
+        });
+
+        return item;
+    }
+
 }

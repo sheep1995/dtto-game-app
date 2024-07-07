@@ -1,9 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { UserItem } from './UserItem';
+import { Transaction } from './Transaction';
+import { Voucher } from './Voucher';
 
 @Entity('Items')
 export class Item {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn()
   itemId: string;
 
   @Column({ type: 'varchar' })
@@ -26,4 +28,10 @@ export class Item {
 
   @OneToMany(() => UserItem, userItem => userItem.item)
   userItems: UserItem[];
+
+  @OneToMany(() => Transaction, transaction => transaction.item)
+  transactions: Transaction[];
+  
+  @OneToMany(() => Voucher, voucher => voucher.item)
+  vouchers: Voucher[];
 }

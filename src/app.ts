@@ -1,7 +1,9 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import { router as v1 } from './routes/v1/index';
+import { router as appRoutes } from './routes/app/index';
+import { router as adminRoutes } from './routes/admin/index';
 import logger from './logger';
 import authMiddleware from './middlewares/auth';
+import adminAuthMiddleware from './middlewares/adminAuth';
 import { swaggerUi, swaggerSpec } from './swagger';
 
 class App {
@@ -17,8 +19,6 @@ class App {
 	private config(): void {
 		this.app.use(express.json());
 		this.app.use(express.urlencoded({ extended: false }));
-
-		this.app.use('/api', authMiddleware);
 
 		this.app.use((req: Request, res: Response, next: NextFunction) => {
 			const logData = {
@@ -40,7 +40,11 @@ class App {
 	}
 
 	private routes(): void {
-		this.app.use('/api', v1);
+		// Apply admin routes with adminAuthMiddleware
+        this.app.use('/api/admin', adminAuthMiddleware, adminRoutes);
+
+        // Apply general authMiddleware to all /api routes excluding /api/admin
+        this.app.use('/api', authMiddleware, appRoutes);
 	}
 
 	private errorHandling(): void {

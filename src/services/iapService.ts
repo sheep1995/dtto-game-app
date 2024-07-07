@@ -1,5 +1,6 @@
 import iap from 'in-app-purchase';
-import pool from '../database';
+import { AppDataSource } from '../config/data-source';
+import { Transaction } from '../entities/Transaction';
 
 export const setupIAP = async (platform: string) => {
     const config: any = {
@@ -82,8 +83,12 @@ export const validateReceipt = async (platform: string, receipt: any, commodityI
     return { errorMessage, orderId };
 };
 
-export const getThePurchase = async (orderId: string) => {
-    const query = `SELECT COUNT(*) AS count FROM Purchases WHERE transactionId = ?`;
-    const [rows] = await pool.query(query, [orderId]);
-    return rows[0].count > 0;
-};
+export const getThePurchase = async (orderId: string): Promise<boolean> => {
+    const transactionRepository = AppDataSource.getRepository(Transaction);
+  
+    const count = await transactionRepository.count({
+      where: { transactionId: orderId }
+    });
+  
+    return count > 0;
+  };

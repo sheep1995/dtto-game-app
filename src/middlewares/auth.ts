@@ -10,7 +10,7 @@ interface User {
 
 type AuthenticateFunction = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
-const pathsNoRequiringAuth = ['/v1/users/login']; // 不需要 JWT 驗證的 paths
+const pathsNoRequiringAuth = ['/users/login']; // 不需要 JWT 驗證的 paths
 // authenticate 函数
 const authenticate: AuthenticateFunction = async (req, res, next) => {
     try {
@@ -30,7 +30,7 @@ const authenticate: AuthenticateFunction = async (req, res, next) => {
         const { uId, userId, loginType } = jwt.verify(token, process.env.JWT_SECRET) as User;
 
         const user = await UserService.getUserByuuId(uId);
-
+        console.debug('user', user);
         // Check if user exists and if the userId and loginType match the decoded token
         if (!user || user.userId !== userId || user.loginType !== loginType) {
             res.status(401).json({ error: 'Unauthorized: Invalid user' });

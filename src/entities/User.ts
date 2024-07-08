@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UserItem } from './UserItem';
+import { Session } from './Session';
 import { GameMode2000Score } from './GameMode2000Score';
 import { GameModeLimitedTimeScore } from './GameModeLimitedTimeScore';
 import { GameModeNormalScore } from './GameModeNormalScore';
@@ -54,4 +55,7 @@ export class User {
 
   @OneToMany(() => Transaction, transaction => transaction.user)
   transactions: Transaction[];
+
+  @OneToMany(() => Session, session => session.user)
+  sessions: Session[];
 }

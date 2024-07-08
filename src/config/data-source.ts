@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/User';
+import { Session } from '../entities/Session';
 import { Item } from '../entities/Item';
 import { UserItem } from '../entities/UserItem';
 import { Transaction } from '../entities/Transaction';
@@ -12,6 +13,7 @@ import { GameModeNormalScore } from '../entities/GameModeNormalScore';
 
 import { Admin } from '../entities/Admin';
 import { Compensation } from '../entities/Compensation';
+import { DailyMetrics } from '../entities/DailyMetrics';
 
 import * as dotenv from 'dotenv';
 
@@ -28,6 +30,7 @@ export const AppDataSource = new DataSource({
   logging: false,
   entities: [ 
     User,
+    Session,
     Item,
     UserItem,
     Transaction,
@@ -38,7 +41,8 @@ export const AppDataSource = new DataSource({
     CharacterLevel,
 
     Admin,
-    Compensation
+    Compensation,
+    DailyMetrics
   ],
   migrations: [],
   subscribers: [],

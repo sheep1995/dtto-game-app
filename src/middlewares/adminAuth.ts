@@ -30,7 +30,7 @@ const authenticate: AuthenticateFunction = async (req, res, next) => {
         const { id } = jwt.verify(token, process.env.JWT_SECRET) as Staff;
 
         const staff = await AdminService.getStaffById(id);
-
+        console.debug('staff', staff);
         // Check if user exists and if the userId and loginType match the decoded token
         if (!staff ) {
             res.status(401).json({ error: 'Unauthorized: Invalid user' });

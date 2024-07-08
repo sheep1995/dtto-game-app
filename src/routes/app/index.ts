@@ -19,17 +19,17 @@ _router.use(function (req: Request, res: Response, next: NextFunction) {
 });
 
 // HEALTHCHECK
-_router.route('/v1/health-check').get(function (req: Request, res: Response) {
+_router.route('/health-check').get(function (req: Request, res: Response) {
     return res.status(200).json({ healthy: true, version: 'v1' });
 });
 
 //EXPORT ROUTES WITH BASEPATH
-_router.use('/v1/users', UserRouter);
-_router.use('/v1/scores', ScoreRoutes);
-_router.use('/v1/ads', AdRoutes);
-_router.use('/v1/commodities', CommodityRoutes);
-_router.use('/v1/character-eggs', CharacterEggsRoutes);
-_router.use('/v1/combine-items', CombineItemsRoutes);
-_router.use('/v1/user-items', UserItemRoutes);
+_router.use('/users', UserRouter);
+_router.use('/scores', ScoreRoutes);
+_router.use('/ads', AdRoutes);
+_router.use('/commodities', CommodityRoutes);
+_router.use('/character-eggs', CharacterEggsRoutes);
+_router.use('/combine-items', CombineItemsRoutes);
+_router.use('/user-items', UserItemRoutes);
 
 export const router = _router;

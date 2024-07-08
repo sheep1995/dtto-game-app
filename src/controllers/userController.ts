@@ -28,12 +28,14 @@ export class UserController {
                 const token = generateToken(uId, userId, loginType);
 
                 await UserService.addUser(uId, userId, token, email, loginType);
+                await UserService.loginUser(userId);
                 res.json({ userId, token });
             } else {
                 const { uId, userId, loginType } = user;
                 const newToken = generateToken(uId, userId, loginType);
-
+                
                 await UserService.updateUserToken(uId, newToken);
+                await UserService.loginUser(userId);
                 res.json({ userId, token: newToken });
             }
         } catch (err) {

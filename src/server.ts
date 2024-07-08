@@ -1,6 +1,7 @@
 import app from './app';
 import { AppDataSource } from './config/data-source';
 import dotenv from 'dotenv';
+import './cronJob';
 
 dotenv.config();
 

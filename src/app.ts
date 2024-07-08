@@ -44,7 +44,7 @@ class App {
         this.app.use('/api/admin', adminAuthMiddleware, adminRoutes);
 
         // Apply general authMiddleware to all /api routes excluding /api/admin
-        this.app.use('/api', authMiddleware, appRoutes);
+        this.app.use('/api/app', authMiddleware, appRoutes);
 	}
 
 	private errorHandling(): void {

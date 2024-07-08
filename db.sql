@@ -110,6 +110,21 @@ CREATE TABLE IF NOT EXISTS Admins (
     updatedTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS Sessions (
+    sessionId CHAR(36) PRIMARY KEY,
+    userId CHAR(36) NOT NULL,
+    loginTime TIMESTAMP NOT NULL,
+    lastHeartbeat TIMESTAMP,
+    logoutTime TIMESTAMP,
+    active BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS DailyMetrics (
+    date DATE PRIMARY KEY,
+    highestConcurrentUsers INT DEFAULT 0
+);
+
 
 INSERT INTO items (itemId, itemName, itemType, itemAttributes, itemDescription)
 VALUES

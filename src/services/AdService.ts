@@ -1,6 +1,11 @@
 import Redis from 'ioredis';
 
-const redis = new Redis();
+const redisHost = process.env.REDIS_HOST || 'localhost';
+console.debug('redisHost', redisHost);
+const redis = new Redis({
+  host: redisHost,
+  port: 6379
+});
 
 // Mapping table for default ad daily limited counts by adItemName
 const defaultCounts: Record<string, number> = {

@@ -1,6 +1,31 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: mydatabase2
+      MYSQL_USER: sammy
+      MYSQL_PASSWORD: sammy123
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+      - db-data:/var/lib/mysql
+  
+  redis:
+    image: redis:alpine
+    networks:
+      - app-network
+
   app:
     build:
       context: .
@@ -8,36 +33,33 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     environment:
-      - NODE_ENV=production
-      - DB_HOST=localhost
-      - DB_PORT=3306
-      - DB_USERNAME=sammy
-      - DB_PASSWORD=sammy123
-      - DB_DATABASE=mydatabase3
-      - PACKAGE_NAME=com.WistronEnt.socialmedia.star
-      - GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCubtquUNKTz90u\n8uc84VmCCao6szpQcM9AD4m95hVGxNw0BAfTiUDtuxgBNzXUJqOFpmPnv49FsNgR\ne2RNxhkRcdiVKw/MImHt4Bumol7vx0tv+++NoLpAjtABejnMeX40KPqRa9INy0WX\nvLx83suHq+ryZ9A6RtnnnFo2V9uh/eS6CNklQYhj1zDw1e2GxPAl8gAtVkXEI7Q4\nuhOeCF20mI2deppD92tdRgyN47Qap/B+rHjxv91Fb5KMNptSKoyYcHy2g9AreAlV\neqVvx+zehrKfh285NZhkIAhnpq/FjywdYB4XZmyh3nj5tewlVaTeYvE+Y3HZFcTr\n1WOPz9d5AgMBAAECggEARu9+z8+/auvnw211mxz7dPXwO7HiP484wRDwj4DPWzm4\nYRDYi+5vsJ3au7fTlKRn8HSDgV216n3pyGY5GqW6UQ1Oqg7afEXpND7kj8XNPM57\nv50hRKO9yn4pWch2U9B+gcC+cT/7Kq/k67mNn2xNMa24vH56QBDLEbTUPPBKuZul\nvrIrgTtg0wC4D3Zzrx/6hNNiiOsGFZ40W7peUisMrXqnT/2AkBrIaLHEdEX63PqQ\n+ZFQ1/btWuiMt4pwWaIUKtoyLVWfsUF0A5vEosKVHej2HFHLgboug9voM+BC/jmo\nR8phkoqWfqO5SCiyHTrbY+CKmF7+u84IYnYYWnQDPwKBgQDjgl0xDZOeittVZaqN\nEL2q6hQGO/A6gJyYjLjT5dow8WsGwcMXgeMrulLqRuT4FXmXmGGEqg40ynFP61bd\nZP4R/tmvMNalXE67KT7ZsCT7t2DLAR2hVXTKqS/XcBv+CZf51IxTuhKplqHOOAZN\nABCMOgZIYMMUSS5YYEeCfxc/OwKBgQDERvBxt4egJCak/0yjnLLMcnEDZ/8nsdCe\ncjTlol9WS9EyP0ZBzhF1Q5g4uFhPE1IqnoIkrKs275NcIBAwJ2hVHEmAqLHvoswQ\nAqw+pODdY8bpTUbgKyw5WDp78I8XDEj49GwsQSwK/wkzorQtRMuZtB7Qq+6Dt4nT\nmO9QX3pA2wKBgQC+WOP/loxbqXG5EUaQn+EQjqgSTzO+vrxGJfa90yGqsVIKZTMF\nB/c5LrsQqCAKMG17GFL+3Ajmwjnr08rpkQXBqKgYm5P65jA5B1k+aNGIiPTC5DwW\nL5l3tfYBGhtRgFVXAS4nHxdeLFlUYCtlYRh3OlTnWY3d+xx7dJJf7FVW4QKBgQCM\npZDSzALh3EXc4hyW+UiefDtDh5gtZ5vojkodazcJ7ZZgfTrpGLMl5mQD8QVG1L+C\nTsdPZHPkD9T2pPs0pmh65KQ/D6NB5tR3fJLU6O1Bd6gnsfph1E4CYZi3C3Bdwa3g\nx7VkGOdokcyUNbkK30tOPuX9/dYSiMi42dRTMbe3FQKBgQC7hBX7MZCYe0f6SMM2\ny60yaHX3xUdI7J81SFhFvGsQEoHdB6jeRDdriacKSbYjoij5Za07tKI9LHTRi2W/\nilU5i2kMaGUiWG5s7ShqsWrhevtelWCVYyaYpe+kuAabmhJOJnf6+YDJwT15YlVn\nZGj+YNDK8Mjn8Jsina9NYY/9/A==\n-----END PRIVATE KEY-----\n
-      - GOOGLE_CLIENT_EMAIL=iap-996@pc-api-7411699249523607034-334.iam.gserviceaccount.com
-      - APPLE_SHARED_SECRET=your-apple-shared-secret
-      - ENVIRONMENT=development  # or 'prod' depending on your environment
-      - GOOGLE_APPLICATION_CREDENTIALS=C:\Users\User\toptok-8bcfc-0617bbd97eb9.json
-      - JWT_SECRET=test
+      NODE_ENV: production
+      DB_HOST: db
+      REDIS_HOST: redis
+      DB_PORT: 3306
+      DB_USERNAME: sammy
+      DB_PASSWORD: sammy123
+      DB_DATABASE: mydatabase2
+      PACKAGE_NAME: com.WistronEnt.socialmedia.star
+      GOOGLE_PRIVATE_KEY: ${GOOGLE_PRIVATE_KEY}
+      GOOGLE_CLIENT_EMAIL: ${GOOGLE_CLIENT_EMAIL}
+      APPLE_SHARED_SECRET: ${APPLE_SHARED_SECRET}
+      ENVIRONMENT: development  # or 'prod'
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
+      JWT_SECRET: ${JWT_SECRET}
+    networks:
+      - app-network
     volumes:
       - .:/app
       - /app/node_modules
-
-  db:
-    image: mysql:8
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: mydatabase3
-    ports:
-      - "3307:3306"
-    volumes:
-      - db-data:/var/lib/mysql
-      - ./db.sql:/docker-entrypoint-initdb.d/db.sql
-      
-
+   
+networks:
+  app-network:
+  
 volumes:
   db-data:

@@ -1,5 +1,9 @@
 const Redis = require('ioredis');
-const client = new Redis();
+const client = new Redis({
+	host: process.env.REDIS_HOST,  // 使用服務名代替 localhost
+	port: 6379,     // 預設端口
+	password: 'sammy123'  // 如果您設置了密碼
+  });
 
 // 添加或更新玩家分數
 function addOrUpdateScore() {

@@ -1,13 +1,13 @@
 import Redis from 'ioredis';
 
-const redisHost = process.env.REDIS_HOST || 'localhost';
+const redisHost = process.env.REDIS_HOST || '127.0.0.1';
 console.debug('redisHost', redisHost);
 const redis = new Redis({
   host: redisHost,
   port: 6379
 });
 
-// Mapping table for default ad daily limited counts by adItemName
+// Mapping table for default ad daily limited counts by type
 const defaultCounts: Record<string, number> = {
 	CoinMode: 3,
 	CoinDouble: 3,
@@ -15,8 +15,8 @@ const defaultCounts: Record<string, number> = {
 };
 
 class AdService {
-	async setAdCount(adItemName: string, userId: string, date: string, count: number): Promise<number> {
-        const key = `ad_${adItemName}:${userId}:${date}`;
+	async setAdCount(type: string, userId: string, date: string, count: number): Promise<number> {
+        const key = `ad_${type}:${userId}:${date}`;
         try {
             await redis.set(key, count.toString(), 'EX', 60 * 60 * 24);
             return count; // Return the count after setting it in Redis
@@ -26,12 +26,12 @@ class AdService {
         }
     }
 
-	async getAdCount(adItemName: string, userId: string, date: string): Promise<number> {
-		const key = `ad_${adItemName}:${userId}:${date}`;
+	async getAdCount(type: string, userId: string, date: string): Promise<number> {
+		const key = `ad_${type}:${userId}:${date}`;
 		try {
 			const countStr = await redis.get(key);
 			if (countStr === null) {
-				return defaultCounts[adItemName] || 0;
+				return defaultCounts[type] || 0;
 			} else {
 				return parseInt(countStr, 10);
 			}
@@ -41,8 +41,8 @@ class AdService {
 		}
 	}
 
-	async decrementAdCount(adItemName: string, userId: string, date: string): Promise<number> {
-		const key = `ad_${adItemName}:${userId}:${date}`;
+	async decrementAdCount(type: string, userId: string, date: string): Promise<number> {
+		const key = `ad_${type}:${userId}:${date}`;
 		try {
 			const currentCount = await redis.get(key);
 
@@ -58,7 +58,7 @@ class AdService {
 				}
 			} else {
 				// If no current count is found, start decrementing from the default value
-				const remainingCount = (defaultCounts[adItemName] || 1) - 1;
+				const remainingCount = (defaultCounts[type] || 1) - 1;
 				await redis.set(key, remainingCount.toString(), 'EX', 60 * 60 * 24);
 				return remainingCount;
 			}

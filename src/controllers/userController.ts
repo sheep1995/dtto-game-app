@@ -78,8 +78,7 @@ export class UserController {
             return res.status(400).send('No file uploaded.');
         }
         res.status(200).json({
-            message: 'File uploaded successfully.',
-            imageUrl: req.file.cloudStoragePublicUrl
+            avatar: req.file.linkUrl
         });
     }
 

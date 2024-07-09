@@ -4,14 +4,14 @@ import { getDateWithOffset } from '../utils';
 
 export class AdController {
     static async getAdCount(req: Request, res: Response): Promise<void> {
-        const adItemName = req.query.adItemName?.toString();
+        const type = req.query.type?.toString();
         const { userId } = req.user;
     
         try {
             const date = getDateWithOffset();
-            const adCount = await AdService.getAdCount(adItemName, userId, date);
+            const count = await AdService.getAdCount(type, userId, date);
     
-            res.json({ adCount });
+            res.json({ count });
         } catch (error) {
             console.error('Error getting ad count:', error);
             res.status(500).json({ error: 'Internal server error' });
@@ -19,14 +19,14 @@ export class AdController {
     }
     
     static async decrementAdCount(req: Request, res: Response): Promise<void> {
-        const adItemName = req.query.adItemName?.toString();
+        const type = req.query.type?.toString();
         const { userId } = req.user;
     
         try {
             const date = getDateWithOffset();
-            const adCount = await AdService.decrementAdCount(adItemName, userId, date);
+            const count = await AdService.decrementAdCount(type, userId, date);
     
-            res.json({ adCount });
+            res.json({ count });
         } catch (error) {
             console.error('Error getting ad count:', error);
             if (error.message === 'Count is already zero') {
@@ -38,15 +38,15 @@ export class AdController {
     }
     
     static async setAdCount(req: Request, res: Response): Promise<void> {
-        const adItemName = req.query.adItemName?.toString();
+        const type = req.query.type?.toString();
         const { userId } = req.user;
-        const { count } = req.body;
+        const { adcount } = req.body;
     
         try {
             const date = getDateWithOffset();
-            const adCount = await AdService.setAdCount(adItemName, userId, date, count);
+            const count = await AdService.setAdCount(type, userId, date, adcount);
     
-            res.json({ adCount });
+            res.json({ count });
         } catch (error) {
             console.error('Error getting ad count:', error);
             res.status(500).json({ error: 'Internal server error' });

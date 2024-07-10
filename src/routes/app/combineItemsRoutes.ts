@@ -10,6 +10,6 @@ const combineController = new CombineController();
 // 获取合成道具列表
 _router.get('/', authMiddleware, combineController.getCombineItems);
 // 合成道具
-_router.put('/', authMiddleware, combineController.combineItems);
+_router.post('/', authMiddleware, combineController.combineItems);
 
 export const router = _router;

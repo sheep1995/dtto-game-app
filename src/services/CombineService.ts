@@ -108,7 +108,7 @@ export class CombineService {
       where: {
         userId,
         item: {
-          itemType: 'CharacterEgg',
+          itemType: 'character_egg',
         },
       },
       relations: ['item'],
@@ -120,7 +120,7 @@ export class CombineService {
       where: {
         userId,
         item: {
-          itemType: 'CombineItem',
+          itemType: 'combine_item',
         },
       },
       relations: ['item'],

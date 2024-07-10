@@ -48,7 +48,7 @@ _router.post('/character-eggs/:itemId/hatch', authMiddleware, validateHatchEgg, 
  *       200:
  *         description: Successfully added character egg quantity
  */
-_router.post('/character-eggs', authMiddleware, validateAddCharacterEgg, combineController.addCharacterEgg);
+_router.post('/', authMiddleware, validateAddCharacterEgg, combineController.addCharacterEgg);
 
 /**
  * @swagger
@@ -59,6 +59,6 @@ _router.post('/character-eggs', authMiddleware, validateAddCharacterEgg, combine
  *       200:
  *         description: Successfully retrieved character eggs list
  */
-_router.get('/character-eggs', authMiddleware, combineController.getCharacterEggs);
+_router.get('/', authMiddleware, combineController.getCharacterEggs);
 
 export const router = _router;

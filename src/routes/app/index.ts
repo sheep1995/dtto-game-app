@@ -30,6 +30,6 @@ _router.use('/ads', AdRoutes);
 _router.use('/commodities', CommodityRoutes);
 _router.use('/character-eggs', CharacterEggsRoutes);
 _router.use('/combine-items', CombineItemsRoutes);
-_router.use('/user-items', UserItemRoutes);
+_router.use('/items', UserItemRoutes);
 
 export const router = _router;

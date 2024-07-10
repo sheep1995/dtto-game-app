@@ -16,11 +16,11 @@ export class ScoreController {
     };
 
     static async getLeaderboard(req: Request, res: Response): Promise<void> {
-        const { gameMode, timeFrame, page = 1 } = req.query;
+        const { gameMode, period, page = 1 } = req.query;
         const { userId } = req.user;
 
         try {
-            const leaderboard = await ScoreService.getTopScores(gameMode as string, timeFrame as string, userId, Number(page));
+            const leaderboard = await ScoreService.getTopScores(gameMode as string, period as string, userId, Number(page));
             res.json(leaderboard);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);

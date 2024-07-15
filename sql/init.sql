@@ -137,6 +137,40 @@ CREATE TABLE DailyMetrics (
     highestConcurrentUsers INT DEFAULT 0
 );
 
+-- 創建 Rewards 表
+CREATE TABLE Rewards (
+  rewardId VARCHAR(255) PRIMARY KEY,
+  description TEXT NOT NULL,
+  rewards JSON NULL
+);
+
+-- 創建 Tasks 表
+CREATE TABLE Tasks (
+  taskId INT AUTO_INCREMENT PRIMARY KEY,
+  type ENUM('daily', 'weekly') NOT NULL,
+  description TEXT NOT NULL,
+  rewardId VARCHAR(255),
+  requiredCount INT DEFAULT 1,
+  mappingNumbers TEXT NOT NULL, -- 使用 TEXT 字段來存儲多個 mappingNumber
+  operation TEXT NOT NULL,
+  parentTaskId INT NULL,
+  CONSTRAINT FK_Reward FOREIGN KEY (rewardId) REFERENCES Rewards(rewardId)
+);
+
+-- 創建 UserTasks 表
+CREATE TABLE UserTasks (
+  userId VARCHAR(255) NOT NULL,
+  taskId INT NOT NULL,
+  status ENUM('incomplete', 'complete') DEFAULT 'incomplete',
+  currentCount INT DEFAULT 0,
+  completedTime TIMESTAMP NULL,
+  rewardClaimed BOOLEAN DEFAULT FALSE,
+  taskDate DATE NOT NULL,
+  PRIMARY KEY (userId, taskId),
+  CONSTRAINT FK_User FOREIGN KEY (userId) REFERENCES Users(userId),
+  CONSTRAINT FK_Task FOREIGN KEY (taskId) REFERENCES Tasks(taskId)
+);
+
 -- -- Insert into Items
 INSERT INTO Items (itemId, itemName, itemType, itemAttributes, itemDescription)
 VALUES
@@ -158,3 +192,101 @@ VALUES
 ('combine_item_1', 'Magic Stone Level 1', 'combine_item', '{"level": 1, "requiredQuantity": 2}', 'Combine two to get a higher level stone'),
 ('combine_item_2', 'Magic Stone Level 2', 'combine_item', '{"level": 2, "requiredQuantity": 2}', 'Combine two to reach the next level'),
 ('combine_item_3', 'Magic Stone Level 3', 'combine_item', '{"level": 3, "requiredQuantity": 2}', 'Combine two to achieve the ultimate power stone');
+
+
+-- 插入最上层的父任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation)
+VALUES
+('daily', '全部任務達成', 'reward_7', 5, '1,2,3,4,5,6,7', 'complete_all_tasks');
+
+-- 获取插入的最上层父任务的 taskId
+SET @topParentTaskId = LAST_INSERT_ID();
+
+-- 插入父任务，模式游戏次数
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '各模式遊玩次数', 'reward_1', 5, '1,2,3,4,5,6,7', 'play_game', @topParentTaskId);
+
+-- 获取插入的父任务的 taskId
+SET @parentTaskId = LAST_INSERT_ID();
+
+-- 插入各模式游戏次数的子任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '模式1遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_1', @parentTaskId),
+('daily', '模式2遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_2', @parentTaskId),
+('daily', '模式3遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_3', @parentTaskId),
+('daily', '模式4遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_4', @parentTaskId),
+('daily', '模式5遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_4', @parentTaskId);
+
+-- 插入合出特定角色次数的父任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '合出特定角色次数', 'reward_3', 6, '1,2,3,4,5,6,7', 'combine_character', @topParentTaskId);
+
+-- 获取插入的合出特定角色次数父任务的 taskId
+SET @characterParentTaskId = LAST_INSERT_ID();
+
+-- 插入合出特定角色次数的子任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '合出特定角色次数 - Dinu', null, 10, '1,4', 'combine_character_dinu', @characterParentTaskId),
+('daily', '合出特定角色次数 - Dinu', null, 20, '2,7', 'combine_character_dinu', @characterParentTaskId),
+('daily', '合出特定角色次数 - Lynn', null, 10, '1,4', 'combine_character_lynn', @characterParentTaskId),
+('daily', '合出特定角色次数 - Remi', null, 8, '3,5', 'combine_character_remi', @characterParentTaskId),
+('daily', '合出特定角色次数 - Zolly', null, 4, '3,5', 'combine_character_zolly', @characterParentTaskId),
+('daily', '合出特定角色次数 - Bob', null, 2, '3,5', 'combine_character_bob', @characterParentTaskId),
+('daily', '合出特定角色次数 - 最大球', null, 1, '6', 'combine_character_dinu', @characterParentTaskId);
+
+-- 插入特定模式中达到指定分数门槛的父任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '特定模式中达到指定分数门槛', 'reward_2', 1, '1,2,3,4,5,6,7', 'reach_score', @topParentTaskId);
+
+-- 获取插入的特定模式中达到指定分数门槛父任务的 taskId
+SET @scoreThresholdParentTaskId = LAST_INSERT_ID();
+
+-- 插入特定模式中达到指定分数门槛的子任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '達到指定分數 - 模式1', null, 1200, '1,4', 'reach_score_mode_1', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式1', null, 1300, '2,7', 'reach_scored_mode_1', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式1', null, 1500, '3,5', 'reach_score_mode_1', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式1', null, 1800, '6', 'reach_score_mode_1', @scoreThresholdParentTaskId);
+
+('daily', '達到指定分數 - 模式2', null, 1200, '1,4', 'reach_score_mode_2', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式2', null, 1300, '2,7', 'reach_scored_mode_2', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式2', null, 1500, '3,5', 'reach_score_mode_2', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式2', null, 1800, '6', 'reach_score_mode_2', @scoreThresholdParentTaskId);
+
+('daily', '達到指定分數 - 模式3', null, 1200, '1,4', 'reach_score_mode_3', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式3', null, 1300, '2,7', 'reach_scored_mode_3', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式3', null, 1500, '3,5', 'reach_score_mode_3', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式3', null, 1800, '6', 'reach_score_mode_3', @scoreThresholdParentTaskId);
+
+('daily', '達到指定分數 - 模式4', null, 1200, '1,4', 'reach_score_mode_4', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式4', null, 1300, '2,7', 'reach_scored_mode_4', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式4', null, 1500, '3,5', 'reach_score_mode_4', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式4', null, 1800, '6', 'reach_score_mode_4', @scoreThresholdParentTaskId);
+
+('daily', '達到指定分數 - 模式5', null, 1200, '1,4', 'reach_score_mode_5', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式5', null, 1300, '2,7', 'reach_scored_mode_5', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式5', null, 1500, '3,5', 'reach_score_mode_5', @scoreThresholdParentTaskId),
+('daily', '達到指定分數 - 模式5', null, 1800, '6', 'reach_score_mode_5', @scoreThresholdParentTaskId);
+
+-- 插入其他任务
+INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
+VALUES
+('daily', '使用道具次数', 'reward_4', 2, '1,2,3,4,5,6,7', 'use_item', @topParentTaskId),
+('daily', '看广告/轮命次数', 'reward_5', 2, '1,2,3,4,5,6,7', 'watch_ad', @topParentTaskId);
+
+
+-- 插入獎勵
+INSERT INTO Rewards (rewardId, description, rewards)
+VALUES
+('reward_1', '7反券', '{"type": "voucher", "amount": 7}'),
+('reward_2', '7反券', '{"type": "voucher", "amount": 7}'),
+('reward_3', '7反券', '{"type": "voucher", "amount": 7}'),
+('reward_4', '1綠券', '{"type": "voucher", "amount": 1}'),
+('reward_5', '1綠券', '{"type": "voucher", "amount": 1}'),
+('reward_6', '9反券 1綠券', '{"type": "voucher", "amount": 9, "extra": {"type": "voucher", "amount": 1}}');

@@ -5,11 +5,8 @@ export class Reward {
   @PrimaryColumn()
   rewardId: string;
 
-  @Column('int')
-  point: number;
-
-  @Column({ type: "enum", enum: ["daily", "weekly"] })
-  type: string;
+  @Column('text')
+  description: string;
 
   @Column({ type: 'json', nullable: true })
   rewards: any;

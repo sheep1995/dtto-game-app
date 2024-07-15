@@ -10,6 +10,9 @@ import { CharacterLevel } from '../entities/CharacterLevel';
 import { GameMode2000Score } from '../entities/GameMode2000Score';
 import { GameModeLimitedTimeScore } from '../entities/GameModeLimitedTimeScore';
 import { GameModeNormalScore } from '../entities/GameModeNormalScore';
+import { Task } from '../entities/Task';
+import { UserTask } from '../entities/UserTask';
+import { Reward } from '../entities/Reward';
 
 import { Admin } from '../entities/Admin';
 import { Compensation } from '../entities/Compensation';
@@ -39,6 +42,9 @@ export const AppDataSource = new DataSource({
     GameModeLimitedTimeScore,
     GameModeNormalScore,
     CharacterLevel,
+    Task,
+    UserTask,
+    Reward,
 
     Admin,
     Compensation,

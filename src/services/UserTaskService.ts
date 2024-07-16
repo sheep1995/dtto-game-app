@@ -9,13 +9,32 @@ export class UserTaskService {
 		const taskRepository = AppDataSource.getRepository(Task);
 
 		const today = new Date();
-		const dayOfWeek = today.getDay() + 1;
+		const dayOfWeek = today.getDay();
 		const weekOfYear = Math.ceil((today.getDate() - 1 - today.getDay()) / 7);
 		const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
+		// 查询所有相关任务
 		const tasks = await taskRepository.find();
+
+		// 找到 reach_score 任务并随机选择一个子任务
+		const taskOfReachScore = tasks.find(task => task.operation === 'reach_score');
+		const taskIdOfReachScore = taskOfReachScore ? taskOfReachScore.taskId : null;
+		let selectedModeTask = null;
+
+		if (taskIdOfReachScore) {
+			const modeTasks = tasks.filter(t => t.parentTaskId === taskIdOfReachScore);
+			if (modeTasks.length > 0) {
+				selectedModeTask = modeTasks[Math.floor(Math.random() * modeTasks.length)];
+			}
+		}
+
+		// 过滤出相关任务并
 		const relevantTasks = tasks.filter(task => {
 			const mappingNumbers = task.mappingNumbers.split(',').map(Number);
+			// 移除 reach_score_mode_tasks
+			if (task.parentTaskId === taskIdOfReachScore) {
+				return false;
+			}
 			if (task.type === 'daily' && mappingNumbers.includes(dayOfWeek)) {
 				return true;
 			}
@@ -25,48 +44,71 @@ export class UserTaskService {
 			return false;
 		});
 
-		for (const task of relevantTasks) {
-			let userTask = await userTasksRepository.findOne({ where: { userId, taskId: task.taskId, taskDate } });
-			if (!userTask) {
+		// 添加随机选择的子任务到 relevantTasks
+		if (selectedModeTask) {
+			relevantTasks.push(selectedModeTask);
+		}
+
+		// 初始化 UserTask
+		let userTask = await userTasksRepository.findOne({ where: { userId, taskDate } });
+		const userTasksToInsert: UserTask[] = [];
+		if (!userTask) {
+			for (const task of relevantTasks) {
 				userTask = new UserTask();
 				userTask.userId = userId;
 				userTask.taskId = task.taskId;
 				userTask.currentCount = 0;
 				userTask.status = 'incomplete';
 				userTask.taskDate = taskDate;
-				await userTasksRepository.save(userTask);
+				userTasksToInsert.push(userTask);
 			}
 		}
 
-		// 处理特定模式中达到指定分数门槛的任务，随机选择子任务
-		const scoreThresholdParentTask = tasks.find(task => task.operation === 'reach_score_threshold');
-		if (scoreThresholdParentTask) {
-			const childTasks = tasks.filter(task => task.parentTaskId === scoreThresholdParentTask.taskId);
-			const randomChildTask = childTasks[Math.floor(Math.random() * childTasks.length)];
-
-			let userTask = await userTasksRepository.findOne({ where: { userId, taskId: randomChildTask.taskId, taskDate } });
-			if (!userTask) {
-				userTask = new UserTask();
-				userTask.userId = userId;
-				userTask.taskId = randomChildTask.taskId;
-				userTask.currentCount = 0;
-				userTask.status = 'incomplete';
-				userTask.taskDate = taskDate;
-				await userTasksRepository.save(userTask);
-			}
+		// 批量插入數據
+		if (userTasksToInsert.length > 0) {
+			await userTasksRepository.save(userTasksToInsert);
 		}
 
+		// 查询所有用户任务
 		const userTasks = await userTasksRepository.find({ where: { userId, taskDate }, relations: ['task'] });
-		const groupedTasks = userTasks.reduce((groups, userTask) => {
-			const parentTaskId = userTask.task.parentTaskId || userTask.task.taskId;
-			if (!groups[parentTaskId]) {
-				groups[parentTaskId] = [];
-			}
-			groups[parentTaskId].push(userTask);
-			return groups;
-		}, {});
 
-		return groupedTasks;
+		// 构建任务树
+		const taskTree = this.buildTaskTree(userTasks);
+
+		return taskTree;
+	}
+
+	private static buildTaskTree(userTasks: UserTask[]): any {
+		const taskMap = new Map<string, any>();
+
+		userTasks.forEach(userTask => {
+			const task = userTask.task;
+			const taskData = {
+				taskId: task.taskId,
+				type: task.type,
+				description: task.description,
+				rewardId: task.rewardId,
+				requiredCount: task.requiredCount,
+				currentCount: userTask.currentCount,
+				childTasks: []
+			};
+
+			taskMap.set(task.taskId, taskData);
+		});
+
+		userTasks.forEach(userTask => {
+			const task = userTask.task;
+			if (task.parentTaskId) {
+				const parentTask = taskMap.get(task.parentTaskId);
+				if (parentTask) {
+					parentTask.childTasks.push(taskMap.get(task.taskId));
+				}
+			}
+		});
+
+		// 找到最顶层的任务，确保它没有父任务
+		const topParentTask = Array.from(taskMap.values()).find(task => !task.parentTaskId);
+		return topParentTask;
 	}
 
 	static async handleOperation(userId: string, operation: string, detail: string) {

@@ -197,7 +197,7 @@ VALUES
 -- 插入最上层的父任务
 INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation)
 VALUES
-('daily', '全部任務達成', 'reward_7', 5, '1,2,3,4,5,6,7', 'complete_all_tasks');
+('daily', '全部任務達成', 'reward_6', 5, '1,2,3,4,5,6,7', 'complete_all_tasks');
 
 -- 获取插入的最上层父任务的 taskId
 SET @topParentTaskId = LAST_INSERT_ID();
@@ -252,23 +252,19 @@ VALUES
 ('daily', '達到指定分數 - 模式1', null, 1200, '1,4', 'reach_score_mode_1', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式1', null, 1300, '2,7', 'reach_scored_mode_1', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式1', null, 1500, '3,5', 'reach_score_mode_1', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式1', null, 1800, '6', 'reach_score_mode_1', @scoreThresholdParentTaskId);
-
+('daily', '達到指定分數 - 模式1', null, 1800, '6', 'reach_score_mode_1', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式2', null, 1200, '1,4', 'reach_score_mode_2', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式2', null, 1300, '2,7', 'reach_scored_mode_2', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式2', null, 1500, '3,5', 'reach_score_mode_2', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式2', null, 1800, '6', 'reach_score_mode_2', @scoreThresholdParentTaskId);
-
+('daily', '達到指定分數 - 模式2', null, 1800, '6', 'reach_score_mode_2', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式3', null, 1200, '1,4', 'reach_score_mode_3', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式3', null, 1300, '2,7', 'reach_scored_mode_3', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式3', null, 1500, '3,5', 'reach_score_mode_3', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式3', null, 1800, '6', 'reach_score_mode_3', @scoreThresholdParentTaskId);
-
+('daily', '達到指定分數 - 模式3', null, 1800, '6', 'reach_score_mode_3', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式4', null, 1200, '1,4', 'reach_score_mode_4', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式4', null, 1300, '2,7', 'reach_scored_mode_4', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式4', null, 1500, '3,5', 'reach_score_mode_4', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式4', null, 1800, '6', 'reach_score_mode_4', @scoreThresholdParentTaskId);
-
+('daily', '達到指定分數 - 模式4', null, 1800, '6', 'reach_score_mode_4', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式5', null, 1200, '1,4', 'reach_score_mode_5', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式5', null, 1300, '2,7', 'reach_scored_mode_5', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式5', null, 1500, '3,5', 'reach_score_mode_5', @scoreThresholdParentTaskId),

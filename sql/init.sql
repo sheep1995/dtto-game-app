@@ -159,16 +159,17 @@ CREATE TABLE Tasks (
 
 -- 創建 UserTasks 表
 CREATE TABLE UserTasks (
-  userId VARCHAR(255) NOT NULL,
-  taskId INT NOT NULL,
-  status ENUM('incomplete', 'complete') DEFAULT 'incomplete',
-  currentCount INT DEFAULT 0,
-  completedTime TIMESTAMP NULL,
-  rewardClaimed BOOLEAN DEFAULT FALSE,
-  taskDate DATE NOT NULL,
-  PRIMARY KEY (userId, taskId),
-  CONSTRAINT FK_User FOREIGN KEY (userId) REFERENCES Users(userId),
-  CONSTRAINT FK_Task FOREIGN KEY (taskId) REFERENCES Tasks(taskId)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(255) NOT NULL,
+    taskId INT NOT NULL,
+    status ENUM('incomplete', 'complete') DEFAULT 'incomplete',
+    currentCount INT DEFAULT 0,
+    completedTime TIMESTAMP NULL,
+    rewardClaimed BOOLEAN DEFAULT FALSE,
+    taskDate DATE NOT NULL,
+    CONSTRAINT FK_User FOREIGN KEY (userId) REFERENCES Users(userId),
+    CONSTRAINT FK_Task FOREIGN KEY (taskId) REFERENCES Tasks(taskId),
+    UNIQUE KEY unique_user_task (userId, taskId, taskDate)
 );
 
 -- -- Insert into Items
@@ -253,22 +254,6 @@ VALUES
 ('daily', '達到指定分數 - 模式1', null, 1300, '2,7', 'reach_scored_mode_1', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式1', null, 1500, '3,5', 'reach_score_mode_1', @scoreThresholdParentTaskId),
 ('daily', '達到指定分數 - 模式1', null, 1800, '6', 'reach_score_mode_1', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式2', null, 1200, '1,4', 'reach_score_mode_2', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式2', null, 1300, '2,7', 'reach_scored_mode_2', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式2', null, 1500, '3,5', 'reach_score_mode_2', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式2', null, 1800, '6', 'reach_score_mode_2', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式3', null, 1200, '1,4', 'reach_score_mode_3', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式3', null, 1300, '2,7', 'reach_scored_mode_3', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式3', null, 1500, '3,5', 'reach_score_mode_3', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式3', null, 1800, '6', 'reach_score_mode_3', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式4', null, 1200, '1,4', 'reach_score_mode_4', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式4', null, 1300, '2,7', 'reach_scored_mode_4', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式4', null, 1500, '3,5', 'reach_score_mode_4', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式4', null, 1800, '6', 'reach_score_mode_4', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式5', null, 1200, '1,4', 'reach_score_mode_5', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式5', null, 1300, '2,7', 'reach_scored_mode_5', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式5', null, 1500, '3,5', 'reach_score_mode_5', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式5', null, 1800, '6', 'reach_score_mode_5', @scoreThresholdParentTaskId);
 
 -- 插入其他任务
 INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
@@ -280,9 +265,37 @@ VALUES
 -- 插入獎勵
 INSERT INTO Rewards (rewardId, description, rewards)
 VALUES
-('reward_1', '7反券', '{"type": "voucher", "amount": 7}'),
-('reward_2', '7反券', '{"type": "voucher", "amount": 7}'),
-('reward_3', '7反券', '{"type": "voucher", "amount": 7}'),
-('reward_4', '1綠券', '{"type": "voucher", "amount": 1}'),
-('reward_5', '1綠券', '{"type": "voucher", "amount": 1}'),
-('reward_6', '9反券 1綠券', '{"type": "voucher", "amount": 9, "extra": {"type": "voucher", "amount": 1}}');
+('reward_daily_1', '7灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 7}]}'),
+('reward_daily_2', '7灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 7}]}'),
+('reward_daily_3', '7灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 7}]}'),
+('reward_daily_4', '1綠券', '{"contents": [{"itemId": "game_item_2", "quantity": 1}]}'),
+('reward_daily_5', '1綠券', '{"contents": [{"itemId": "game_item_2", "quantity": 1}]}'),
+('reward_daily_all', '9灰券 1綠券', '{"contents": [{"itemId": "game_item_1", "quantity": 9}, {"itemId": "game_item_2", "quantity": 1}]}'),
+
+('reward_weekly_1', '10灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 10}]}'),
+('reward_weekly_2', '20灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 20}]}'),
+('reward_weekly_3', '20灰券', '{"contents": [{"itemId": "game_item_1", "quantity": 20}]}'),
+('reward_weekly_4', '1綠券', '{"contents": [{"itemId": "game_item_2", "quantity": 1}]}'),
+('reward_weekly_5', '1綠券', '{"contents": [{"itemId": "game_item_2", "quantity": 1}]}'),
+('reward_weekly_6', '2綠券', '{"contents": [{"itemId": "game_item_2", "quantity": 2}]}'),
+('reward_weekly_all', '10灰券 2綠券', '{"contents": [{"itemId": "game_item_1", "quantity": 10}, {"itemId": "game_item_2", "quantity": 2}]}');
+
+
+-- 插入任务数据
+INSERT INTO Tasks (taskId, type, description, rewardId, schedule, operation) VALUES
+('task_daily_1', 'daily', '各模式遊玩次數', 'reward_daily_1', '1,2,3,4,5,6,7', 'play_count'),
+
+('task_daily_2', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '1,4', 'play_score'),
+('task_daily_3', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '2,7', 'play_score'),
+('task_daily_4', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '3,5', 'play_score'),
+('task_daily_5', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '6', 'play_score'),
+
+('task_daily_6', 'daily', '合出特定角色次數', 'reward_daily_2', '6', 'play_score'),
+
+-- 插入任务条件数据
+INSERT INTO TaskConditions (taskId, description, targetValue) VALUES
+('task_daily_1', '遊玩1次', 1),
+('task_daily_2', '遊玩達1200分', 1200, '1,4'),
+('task_daily_3', '遊玩達1300分', 1300, '2,7'),
+('task_daily_4', '遊玩達1500分', 1500, '3,5'),
+('task_daily_5', '遊玩達1800分', 1800, '6'),

@@ -6,7 +6,7 @@ export class UserTaskController {
 		try {
 			const { userId } = req.user;
 			const tasks = await UserTaskService.getUserTasks(userId);
-			res.send(tasks);
+			res.send({ tasks });
 		} catch (error) {
 			console.error(error);
 			res.status(500).send('Internal Server Error');

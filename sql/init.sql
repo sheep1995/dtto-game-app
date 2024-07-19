@@ -211,7 +211,10 @@ VALUES
 ('character_egg_3', 'Fairy Egg', 'character_egg', '{"contents": [{"itemId": "combine_item_2", "quantity": 2}], "hatchTime": "12 hours"}', 'Discover a fairy companion from this egg'),
 ('combine_item_1', 'Magic Stone Level 1', 'combine_item', '{"level": 1, "requiredQuantity": 2}', 'Combine two to get a higher level stone'),
 ('combine_item_2', 'Magic Stone Level 2', 'combine_item', '{"level": 2, "requiredQuantity": 2}', 'Combine two to reach the next level'),
-('combine_item_3', 'Magic Stone Level 3', 'combine_item', '{"level": 3, "requiredQuantity": 2}', 'Combine two to achieve the ultimate power stone');
+('combine_item_3', 'Magic Stone Level 3', 'combine_item', '{"level": 3, "requiredQuantity": 2}', 'Combine two to achieve the ultimate power stone'),
+
+('gacha_voucher_gray', '灰券', 'gacha_voucher', '{"probabilities": [{"itemId": "character_egg_1", "value": 70}, {"itemId": "character_egg_2", "value": 20}, {"itemId": "character_egg_3", "value": 10}]}', '轉蛋券-灰'),
+('gacha_voucher_green', '綠券', 'gacha_voucher', '{"probabilities": [{"itemId": "character_egg_1", "value": 10}, {"itemId": "character_egg_2", "value": 20}, {"itemId": "character_egg_3", "value": 70}]}', '轉蛋券-綠');
 
 
 -- 插入獎勵

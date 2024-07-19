@@ -1,191 +1,231 @@
 import { AppDataSource } from "../config/data-source";
+import { Between, Like, In, Not } from "typeorm";
 import { UserTask } from "../entities/UserTask";
 import { Task } from "../entities/Task";
+import { TaskCondition } from "../entities/TaskCondition";
 import { Reward } from "../entities/Reward";
+import { UserItem } from "../entities/UserItem";
+import { getWeekInCycle } from "../utils/getWeekInCycle";
 
 export class UserTaskService {
-	static async getUserTasks(userId: string) {
-		const userTasksRepository = AppDataSource.getRepository(UserTask);
-		const taskRepository = AppDataSource.getRepository(Task);
+    static async getTasks(userId: string, taskType: string): Promise<any> {
+        const userTaskRepository = AppDataSource.getRepository(UserTask);
+        const rewardRepository = AppDataSource.getRepository(Reward);
 
-		const today = new Date();
-		const dayOfWeek = today.getDay();
-		const weekOfYear = Math.ceil((today.getDate() - 1 - today.getDay()) / 7);
-		const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        // Determine the start and end of the relevant period (day or week)
+        const today = new Date();
+        let periodStart, periodEnd;
+        if (taskType === 'daily') {
+            periodStart = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0); // Start of the day
+            periodEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999); // End of the day
+        } else if (taskType === 'weekly') {
+            const dayOfWeek = today.getDay();
+            const startOffset = dayOfWeek * 24 * 60 * 60 * 1000; // calculate the start of the week
+            periodStart = new Date(today.getTime() - startOffset);
+            periodEnd = new Date(periodStart.getTime() + 7 * 24 * 60 * 60 * 1000 - 1); // End of the week
+        }
 
-		// 查询所有相关任务
-		const tasks = await taskRepository.find();
+        // Query tasks assigned for the current period
+        let userTasks = await userTaskRepository.find({
+            where: {
+                userId: userId,
+                assignedDate: Between(periodStart, periodEnd),
+                task: {
+                    type: taskType,
+                    taskId: Not(Like('%_all')) //過濾掉全部完成的任務
+                }
+            },
+            relations: ['task', 'task.conditions', 'taskCondition']
+        });
 
-		// 找到 reach_score 任务并随机选择一个子任务
-		const taskOfReachScore = tasks.find(task => task.operation === 'reach_score');
-		const taskIdOfReachScore = taskOfReachScore ? taskOfReachScore.taskId : null;
-		let selectedModeTask = null;
+        // Check for tasks assigned in the period
+        if (userTasks.length === 0) {
+            // No tasks found for the period, proceed to assign tasks
+            await UserTaskService.assignTasks(userId, taskType);
+            userTasks = await userTaskRepository.find({
+                where: {
+                    userId: userId,
+                    assignedDate: Between(periodStart, periodEnd),
+                    task: {
+                        type: taskType,
+                        taskId: Not(Like('%_all')) //過濾掉全部完成的任務
+                    }
+                },
+                relations: ['task', 'task.conditions', 'taskCondition']
+            });
+        }
 
-		if (taskIdOfReachScore) {
-			const modeTasks = tasks.filter(t => t.parentTaskId === taskIdOfReachScore);
-			if (modeTasks.length > 0) {
-				selectedModeTask = modeTasks[Math.floor(Math.random() * modeTasks.length)];
-			}
-		}
+        // Fetch all reward details for the tasks that have a rewardId
+        const rewardIds = userTasks.map(userTask => userTask.task.rewardId).filter(id => id !== null);
+        const rewards = await rewardRepository.findBy({ rewardId: In(rewardIds) });
 
-		// 过滤出相关任务并
-		const relevantTasks = tasks.filter(task => {
-			const mappingNumbers = task.mappingNumbers.split(',').map(Number);
-			// 移除 reach_score_mode_tasks
-			if (task.parentTaskId === taskIdOfReachScore) {
-				return false;
-			}
-			if (task.type === 'daily' && mappingNumbers.includes(dayOfWeek)) {
-				return true;
-			}
-			if (task.type === 'weekly' && mappingNumbers.includes(weekOfYear)) {
-				return true;
-			}
-			return false;
-		});
+        // Fetch the overall completion reward based on task type
+        const completionRewardId = taskType === 'daily' ? 'reward_daily_all' : 'reward_weekly_all';
+        const completionReward = await rewardRepository.findOneBy({ rewardId: completionRewardId });
+        const completionTask = await userTaskRepository.findOne({
+            where: {
+                userId: userId,
+                assignedDate: Between(periodStart, periodEnd),
+                task: {
+                    type: taskType,
+                    taskId: Like('%_all')
+                }
+            }
+        });
 
-		// 添加随机选择的子任务到 relevantTasks
-		if (selectedModeTask) {
-			relevantTasks.push(selectedModeTask);
-		}
+        // Map rewards by id for quick access
+        const rewardsMap = new Map(rewards.map(reward => [reward.rewardId, reward]));
 
-		// 初始化 UserTask
-		let userTask = await userTasksRepository.findOne({ where: { userId, taskDate } });
-		const userTasksToInsert: UserTask[] = [];
-		if (!userTask) {
-			for (const task of relevantTasks) {
-				userTask = new UserTask();
-				userTask.userId = userId;
-				userTask.taskId = task.taskId;
-				userTask.currentCount = 0;
-				userTask.status = 'incomplete';
-				userTask.taskDate = taskDate;
-				userTasksToInsert.push(userTask);
-			}
-		}
+        // Format response
+        const groupedTasks = {};
+        userTasks.forEach(userTask => {
+            const { task, taskCondition } = userTask;
+            const reward = rewardsMap.get(task.rewardId);
 
-		// 批量插入數據
-		if (userTasksToInsert.length > 0) {
-			await userTasksRepository.save(userTasksToInsert);
-		}
+            if (!groupedTasks[task.taskId]) {
+                groupedTasks[task.taskId] = {
+                    taskId: task.taskId,
+                    description: task.description,
+                    conditions: [],
+                    reward: reward ? {
+                        description: reward.description,
+                        contents: reward.rewards.contents,
+                        claimed: userTask.rewardClaimed
+                    } : null
+                };
+            }
+            groupedTasks[task.taskId].conditions.push({
+                description: taskCondition.description,
+                progress: {
+                    current: userTask.currentCount,
+                    total: taskCondition ? taskCondition.targetValue : 1
+                },
+                completed: userTask.status === 'complete'
+            });
+        });
 
-		// 查询所有用户任务
-		const userTasks = await userTasksRepository.find({ where: { userId, taskDate }, relations: ['task'] });
+        const tasksArray = Object.values(groupedTasks);
 
-		// 构建任务树
-		const taskTree = this.buildTaskTree(userTasks);
+        return {
+            tasks: tasksArray,
+            count: tasksArray.length,
+            completionReward: completionReward ? {
+                description: completionReward.description,
+                contents: completionReward.rewards.contents,
+                claimed: completionTask.rewardClaimed
+            } : null
+        };
+    }
 
-		return taskTree;
-	}
+    static async assignTasks(userId: string, taskType: string): Promise<UserTask[]> {
+        const startDate = new Date('2024-07-01T00:00:00+08:00');
+        const today = new Date();
+        const offset = 8; // Taipei is UTC+8
+        const taipeiDate = new Date(today.getTime() + offset * 3600 * 1000);
 
-	private static buildTaskTree(userTasks: UserTask[]): any {
-		const taskMap = new Map<string, any>();
+        const schedule = taskType === 'daily' ? taipeiDate.getDay() : getWeekInCycle(taipeiDate, startDate);
 
-		userTasks.forEach(userTask => {
-			const task = userTask.task;
-			const taskData = {
-				taskId: task.taskId,
-				type: task.type,
-				description: task.description,
-				rewardId: task.rewardId,
-				requiredCount: task.requiredCount,
-				currentCount: userTask.currentCount,
-				childTasks: []
-			};
+        // 根据当天是星期几来筛选任务
+        const tasks = await AppDataSource.getRepository(Task).find({
+            where: {
+                type: taskType,
+                schedule: Like(`%${schedule}%`)  // 假设数据库中星期天存为1，星期一为2，依此类推
+            }
+        });
 
-			taskMap.set(task.taskId, taskData);
-		});
+        const newTasks: UserTask[] = [];
 
-		userTasks.forEach(userTask => {
-			const task = userTask.task;
-			if (task.parentTaskId) {
-				const parentTask = taskMap.get(task.parentTaskId);
-				if (parentTask) {
-					parentTask.childTasks.push(taskMap.get(task.taskId));
-				}
-			}
-		});
+        // 遍历任务并分配条件
+        for (const task of tasks) {
+            const conditions = await AppDataSource.getRepository(TaskCondition).find({
+                where: { taskId: task.taskId }
+            });
 
-		// 找到最顶层的任务，确保它没有父任务
-		const topParentTask = Array.from(taskMap.values()).find(task => !task.parentTaskId);
-		return topParentTask;
-	}
+            // 随机选择条件
+            const selectedConditions = conditions
+                .sort(() => 0.5 - Math.random())
+                .slice(0, task.conditionCount)
+                .sort((a, b) => a.id - b.id);
 
-	static async handleOperation(userId: string, operation: string, detail: string) {
-		const userTasksRepository = AppDataSource.getRepository(UserTask);
-		const taskRepository = AppDataSource.getRepository(Task);
+            // 为每个选中的条件创建用户任务
+            for (const condition of selectedConditions) {
+                const newUserTask = new UserTask();
+                newUserTask.userId = userId;
+                newUserTask.taskId = task.taskId;
+                newUserTask.taskConditionId = condition.id;
+                newUserTask.status = 'assigned';
+                newUserTask.assignedDate = new Date();
 
-		const today = new Date();
-		const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		const tasks = await taskRepository.find({ where: { operation } });
+                newTasks.push(newUserTask);
+            }
+        }
 
-		for (const task of tasks) {
-			let userTask = await userTasksRepository.findOne({ where: { userId, taskId: task.taskId, taskDate } });
+        // 保存新的全部完成的任务
+        const allCompletedTask = new UserTask();
+        allCompletedTask.userId = userId;
+        allCompletedTask.taskId = `task_${taskType}_all`;
+        allCompletedTask.taskConditionId = null;
+        allCompletedTask.status = 'assigned';
+        allCompletedTask.assignedDate = new Date();
+        newTasks.push(allCompletedTask);
 
-			if (!userTask) {
-				userTask = new UserTask();
-				userTask.userId = userId;
-				userTask.taskId = task.taskId;
-				userTask.currentCount = 0;
-				userTask.status = 'incomplete';
-				userTask.taskDate = taskDate;
-			}
+        // 批量保存新的用户任务
+        await AppDataSource.getRepository(UserTask).save(newTasks);
+        return newTasks;
+    }
 
-			userTask.currentCount += 1;
+    static async claimReward(userId: string, taskId: string): Promise<boolean> {
+        const userTaskRepository = AppDataSource.getRepository(UserTask);
+        const rewardRepository = AppDataSource.getRepository(Reward);
+        const userItemRepository = AppDataSource.getRepository(UserItem);
 
-			if (userTask.currentCount >= task.requiredCount) {
-				userTask.status = 'complete';
-				userTask.completedTime = new Date();
-			}
+        const userTasks = await userTaskRepository.find({
+            where: { userId, taskId },
+            relations: ['task']
+        });
 
-			await userTasksRepository.save(userTask);
+        if (!userTasks) {
+            throw new Error("Task not found.");
+        }
 
-			// 递归更新父任务状态
-			if (task.parentTaskId) {
-				await UserTaskService.updateParentTaskStatus(userId, task.parentTaskId, taskDate);
-			}
-		}
-	}
+        if (userTasks[0].rewardClaimed) {
+            throw new Error("Reward has already been claimed.");
+        }
 
-	static async updateParentTaskStatus(userId: string, parentTaskId: string, taskDate: Date) {
-		const userTasksRepository = AppDataSource.getRepository(UserTask);
-		const parentTask = await userTasksRepository.findOne({ where: { userId, taskId: parentTaskId, taskDate }, relations: ['task'] });
+        const reward = await rewardRepository.findOneBy({ rewardId: userTasks[0].task.rewardId });
 
-		if (parentTask) {
-			const subTasks = await userTasksRepository.find({ where: { userId, taskId: parentTaskId, taskDate } });
-			const allSubTasksComplete = subTasks.every(subTask => subTask.status === 'complete');
+        if (!reward) {
+            throw new Error("Reward not found.");
+        }
 
-			if (allSubTasksComplete) {
-				parentTask.status = 'complete';
-				parentTask.completedTime = new Date();
-				await userTasksRepository.save(parentTask);
+        // Mark the reward as claimed for all tasks
+        userTasks.forEach(task => {
+            if (!task.rewardClaimed) {  // Only update tasks where the reward hasn't been claimed
+                task.rewardClaimed = true;
+            }
+        });
+        await userTaskRepository.save(userTasks);
 
-				// 如果父任务还有更高层的父任务，继续递归更新
-				if (parentTask.task.parentTaskId) {
-					await UserTaskService.updateParentTaskStatus(userId, parentTask.task.parentTaskId, taskDate);
-				}
-			}
-		}
-	}
+        // Add items to UserItems
+        for (const content of reward.rewards.contents) {
+            let userItem = await userItemRepository.findOne({
+                where: { userId, itemId: content.itemId }
+            });
 
-	static async claimReward(userId: string, taskId: string) {
-		const userTasksRepository = AppDataSource.getRepository(UserTask);
+            console.debug('userItem', userItem);
+            if (userItem) {
+                userItem.quantity += content.quantity;
+            } else {
+                userItem = userItemRepository.create({
+                    userId,
+                    itemId: content.itemId,
+                    quantity: content.quantity
+                });
+            }
 
-		const today = new Date();
-		const taskDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-		const userTask = await userTasksRepository.findOne({ where: { userId, taskId, taskDate } });
+            await userItemRepository.save(userItem);
+        }
 
-		if (!userTask) {
-			throw new Error('UserTask not found');
-		}
-
-		if (userTask.status !== 'complete' || userTask.rewardClaimed) {
-			throw new Error('Reward cannot be claimed');
-		}
-
-		userTask.rewardClaimed = true;
-		await userTasksRepository.save(userTask);
-
-		return userTask;
-	}
+        return true;
+    }
 }

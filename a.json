@@ -1,0 +1,12 @@
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE Tasks;
+SET FOREIGN_KEY_CHECKS = 1;
+
+TRUNCATE TABLE UserTasks;
+
+INSERT INTO Tasks (taskId, type, description, rewardId, schedule, conditionCount, operation) VALUES
+('task_weekly_all', 'weekly', '每周任務全部完成', 'reward_weekly_all', '1,2,3,4', 0, 'complete_tasks');
+
+UPDATE UserTasks
+SET rewardClaimed = true
+WHERE id = 18;

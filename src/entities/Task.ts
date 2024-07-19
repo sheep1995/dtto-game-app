@@ -1,9 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryColumn, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
 import { UserTask } from './UserTask';
+import { TaskCondition } from "./TaskCondition";
 
 @Entity('Tasks')
 export class Task {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
     taskId: string;
 
     @Column({
@@ -18,25 +19,18 @@ export class Task {
     @Column({ nullable: true })
     rewardId: string;
 
-    @Column({ default: 1 })
-    requiredCount: number;
-
-    @Column('text') // 使用 TEXT 字段來存儲多個 mappingNumber, 舉例：1,4
-    mappingNumbers: string;
-
+    @Column({ type: "varchar", length: 30 })
+    schedule: string;
+    
     @Column()
-    operation: string;
+    conditionCount: number;
 
-    @Column({ nullable: true }) // 添加 parentTaskId 字段，允许为空
-    parentTaskId: string;
+    @Column({ type: "varchar", length: 50 })
+    operation: string;
 
     @OneToMany(() => UserTask, userTask => userTask.task)
     userTasks: UserTask[];
 
-    @ManyToOne(() => Task, task => task.subTasks)
-    @JoinColumn({ name: "parentTaskId" })
-    parentTask: Task;
-
-    @OneToMany(() => Task, task => task.parentTask)
-    subTasks: Task[];
+    @OneToMany(() => TaskCondition, taskCondition => taskCondition.task)
+    conditions: TaskCondition[];
 }

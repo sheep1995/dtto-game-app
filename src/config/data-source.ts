@@ -12,6 +12,7 @@ import { GameModeLimitedTimeScore } from '../entities/GameModeLimitedTimeScore';
 import { GameModeNormalScore } from '../entities/GameModeNormalScore';
 import { Task } from '../entities/Task';
 import { UserTask } from '../entities/UserTask';
+import { TaskCondition } from '../entities/TaskCondition';
 import { Reward } from '../entities/Reward';
 
 import { Admin } from '../entities/Admin';
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     GameModeNormalScore,
     CharacterLevel,
     Task,
+    TaskCondition,
     UserTask,
     Reward,
 

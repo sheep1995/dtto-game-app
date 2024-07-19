@@ -1,14 +1,37 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { Task } from "./Task";
 import { User } from "./User";
+import { TaskCondition } from "./TaskCondition";
 
-@Entity('UserTasks')
+@Entity("UserTasks")
 export class UserTask {
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
+    id: number;
+
+    @Column()
     userId: string;
 
-    @PrimaryColumn()
+    @Column()
     taskId: string;
+
+    @Column({ nullable: true })
+    taskConditionId: number;
+
+    @Column({ default: 0 })
+    currentCount: number;
+
+    @Column({
+        type: "enum",
+        enum: ["assigned", "inprogress", "complete"],
+        default: "assigned"
+    })
+    status: string;
+
+    @Column("timestamp")
+    assignedDate: Date;
+
+    @Column("boolean", { default: false })
+    rewardClaimed: boolean;
 
     @ManyToOne(() => User)
     @JoinColumn({ name: "userId" })
@@ -18,22 +41,7 @@ export class UserTask {
     @JoinColumn({ name: "taskId" })
     task: Task;
 
-    @Column({
-        type: 'enum',
-        enum: ['incomplete', 'complete'],
-        default: 'incomplete'
-    })
-    status: string;
-
-    @Column({ default: 0 })
-    currentCount: number;
-
-    @Column({ type: "timestamp", nullable: true })
-    completedTime: Date;
-
-    @Column({ default: false })
-    rewardClaimed: boolean;
-
-    @Column({ type: "date" })
-    taskDate: Date;
+    @ManyToOne(() => TaskCondition)
+    @JoinColumn({ name: "taskConditionId" })
+    taskCondition: TaskCondition;
 }

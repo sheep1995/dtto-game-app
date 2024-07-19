@@ -5,8 +5,9 @@ export class UserTaskController {
 	static async getTasks(req: Request, res: Response) {
 		try {
 			const { userId } = req.user;
-			const tasks = await UserTaskService.getUserTasks(userId);
-			res.send({ tasks });
+			const { type = 'daily' } = req.query;
+			const tasks = await UserTaskService.getTasks(userId, type as string);
+			res.send(tasks);
 		} catch (error) {
 			console.error(error);
 			res.status(500).send('Internal Server Error');
@@ -14,14 +15,14 @@ export class UserTaskController {
 	}
 
 	static async claimReward(req: Request, res: Response) {
-		const { userId, taskId } = req.body;
-
+        const { taskId } = req.body;
+        const { userId } = req.user;
 		try {
-			const userTask = await UserTaskService.claimReward(userId, taskId);
-			res.send({ message: 'Reward claimed successfully', userTask });
-		} catch (error) {
-			console.error(error.message);
-			res.status(400).send(error.message);
-		}
-	}
+            const result = await UserTaskService.claimReward(userId, taskId);
+            res.status(200).json({ success: true, message: "Reward claimed successfully." });
+        } catch (error) {
+            console.error(error);
+			res.status(500).send('Internal Server Error');
+        }
+    }
 }

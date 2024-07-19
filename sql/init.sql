@@ -139,37 +139,56 @@ CREATE TABLE DailyMetrics (
 
 -- 創建 Rewards 表
 CREATE TABLE Rewards (
-  rewardId VARCHAR(255) PRIMARY KEY,
+  rewardId VARCHAR(50) PRIMARY KEY,
   description TEXT NOT NULL,
   rewards JSON NULL
 );
 
 -- 創建 Tasks 表
 CREATE TABLE Tasks (
-  taskId INT AUTO_INCREMENT PRIMARY KEY,
+  taskId VARCHAR(50) NOT NULL PRIMARY KEY,
   type ENUM('daily', 'weekly') NOT NULL,
   description TEXT NOT NULL,
-  rewardId VARCHAR(255),
+  rewardId VARCHAR(50),
   requiredCount INT DEFAULT 1,
-  mappingNumbers TEXT NOT NULL, -- 使用 TEXT 字段來存儲多個 mappingNumber
-  operation TEXT NOT NULL,
-  parentTaskId INT NULL,
+  schedule VARCHAR(30) NOT NULL, -- 使用 TEXT 字段來存儲多個 mappingNumber
+  conditionCount INT NOT NULL,
+  operation VARCHAR(50) NOT NULL,
   CONSTRAINT FK_Reward FOREIGN KEY (rewardId) REFERENCES Rewards(rewardId)
+);
+
+-- 创建 TaskConditions 表
+CREATE TABLE TaskConditions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    taskId VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    targetValue INT NOT NULL,
+    extra JSON,
+    FOREIGN KEY (taskId) REFERENCES Tasks(taskId) ON DELETE CASCADE
 );
 
 -- 創建 UserTasks 表
 CREATE TABLE UserTasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     userId VARCHAR(255) NOT NULL,
-    taskId INT NOT NULL,
-    status ENUM('incomplete', 'complete') DEFAULT 'incomplete',
+    taskId VARCHAR(255) NOT NULL,
+    taskConditionId INT NULL,
     currentCount INT DEFAULT 0,
-    completedTime TIMESTAMP NULL,
-    rewardClaimed BOOLEAN DEFAULT FALSE,
-    taskDate DATE NOT NULL,
-    CONSTRAINT FK_User FOREIGN KEY (userId) REFERENCES Users(userId),
-    CONSTRAINT FK_Task FOREIGN KEY (taskId) REFERENCES Tasks(taskId),
-    UNIQUE KEY unique_user_task (userId, taskId, taskDate)
+    status ENUM('assigned', 'inprogress', 'complete') NOT NULL DEFAULT 'assigned',
+    assignedDate TIMESTAMP NOT NULL,
+    rewardClaimed BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_user
+        FOREIGN KEY (userId)
+        REFERENCES Users(userId)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_task
+        FOREIGN KEY (taskId)
+        REFERENCES Tasks(taskId)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_task_condition
+        FOREIGN KEY (taskConditionId)
+        REFERENCES TaskConditions(id)
+        ON DELETE SET NULL
 );
 
 -- -- Insert into Items
@@ -195,73 +214,6 @@ VALUES
 ('combine_item_3', 'Magic Stone Level 3', 'combine_item', '{"level": 3, "requiredQuantity": 2}', 'Combine two to achieve the ultimate power stone');
 
 
--- 插入最上层的父任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation)
-VALUES
-('daily', '全部任務達成', 'reward_6', 5, '1,2,3,4,5,6,7', 'complete_all_tasks');
-
--- 获取插入的最上层父任务的 taskId
-SET @topParentTaskId = LAST_INSERT_ID();
-
--- 插入父任务，模式游戏次数
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '各模式遊玩次数', 'reward_1', 5, '1,2,3,4,5,6,7', 'play_game', @topParentTaskId);
-
--- 获取插入的父任务的 taskId
-SET @parentTaskId = LAST_INSERT_ID();
-
--- 插入各模式游戏次数的子任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '模式1遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_1', @parentTaskId),
-('daily', '模式2遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_2', @parentTaskId),
-('daily', '模式3遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_3', @parentTaskId),
-('daily', '模式4遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_4', @parentTaskId),
-('daily', '模式5遊玩次數', null, 1, '1,2,3,4,5,6,7', 'play_game_mode_4', @parentTaskId);
-
--- 插入合出特定角色次数的父任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '合出特定角色次数', 'reward_3', 6, '1,2,3,4,5,6,7', 'combine_character', @topParentTaskId);
-
--- 获取插入的合出特定角色次数父任务的 taskId
-SET @characterParentTaskId = LAST_INSERT_ID();
-
--- 插入合出特定角色次数的子任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '合出特定角色次数 - Dinu', null, 10, '1,4', 'combine_character_dinu', @characterParentTaskId),
-('daily', '合出特定角色次数 - Dinu', null, 20, '2,7', 'combine_character_dinu', @characterParentTaskId),
-('daily', '合出特定角色次数 - Lynn', null, 10, '1,4', 'combine_character_lynn', @characterParentTaskId),
-('daily', '合出特定角色次数 - Remi', null, 8, '3,5', 'combine_character_remi', @characterParentTaskId),
-('daily', '合出特定角色次数 - Zolly', null, 4, '3,5', 'combine_character_zolly', @characterParentTaskId),
-('daily', '合出特定角色次数 - Bob', null, 2, '3,5', 'combine_character_bob', @characterParentTaskId),
-('daily', '合出特定角色次数 - 最大球', null, 1, '6', 'combine_character_dinu', @characterParentTaskId);
-
--- 插入特定模式中达到指定分数门槛的父任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '特定模式中达到指定分数门槛', 'reward_2', 1, '1,2,3,4,5,6,7', 'reach_score', @topParentTaskId);
-
--- 获取插入的特定模式中达到指定分数门槛父任务的 taskId
-SET @scoreThresholdParentTaskId = LAST_INSERT_ID();
-
--- 插入特定模式中达到指定分数门槛的子任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '達到指定分數 - 模式1', null, 1200, '1,4', 'reach_score_mode_1', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式1', null, 1300, '2,7', 'reach_scored_mode_1', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式1', null, 1500, '3,5', 'reach_score_mode_1', @scoreThresholdParentTaskId),
-('daily', '達到指定分數 - 模式1', null, 1800, '6', 'reach_score_mode_1', @scoreThresholdParentTaskId),
-
--- 插入其他任务
-INSERT INTO Tasks (type, description, rewardId, requiredCount, mappingNumbers, operation, parentTaskId)
-VALUES
-('daily', '使用道具次数', 'reward_4', 2, '1,2,3,4,5,6,7', 'use_item', @topParentTaskId),
-('daily', '看广告/轮命次数', 'reward_5', 2, '1,2,3,4,5,6,7', 'watch_ad', @topParentTaskId);
-
-
 -- 插入獎勵
 INSERT INTO Rewards (rewardId, description, rewards)
 VALUES
@@ -281,21 +233,164 @@ VALUES
 ('reward_weekly_all', '10灰券 2綠券', '{"contents": [{"itemId": "game_item_1", "quantity": 10}, {"itemId": "game_item_2", "quantity": 2}]}');
 
 
--- 插入任务数据
-INSERT INTO Tasks (taskId, type, description, rewardId, schedule, operation) VALUES
-('task_daily_1', 'daily', '各模式遊玩次數', 'reward_daily_1', '1,2,3,4,5,6,7', 'play_count'),
+-- 插入每日任務
+INSERT INTO Tasks (taskId, type, description, rewardId, schedule, conditionCount, operation) VALUES
+('task_daily_1', 'daily', '各模式遊玩', 'reward_daily_1', '0,1,2,3,4,5,6', 5, 'play_count'),
+('task_daily_2', 'daily', '隨機模式達指定分數', 'reward_daily_2', '1,4', 1, 'play_score'),
+('task_daily_3', 'daily', '隨機模式達指定分數', 'reward_daily_2', '0,2', 1, 'play_score'),
+('task_daily_4', 'daily', '隨機模式達指定分數', 'reward_daily_2', '3,5', 1, 'play_score'),
+('task_daily_5', 'daily', '隨機模式達指定分數', 'reward_daily_2', '6', 1, 'play_score'),
+('task_daily_6', 'daily', '合出特定角色', 'reward_daily_3', '1,4', 2, 'combine_character'),
+('task_daily_7', 'daily', '合出特定角色', 'reward_daily_3', '0,2', 1, 'combine_character'),
+('task_daily_8', 'daily', '合出特定角色', 'reward_daily_3', '3,5', 3, 'combine_character'),
+('task_daily_9', 'daily', '合出特定角色', 'reward_daily_3', '6', 1, 'combine_character'),
+('task_daily_10', 'daily', '使用道具', 'reward_daily_4', '0,1,2,3,4,5,6', 1, 'use_items'),
+('task_daily_11', 'daily', '觀看廣告', 'reward_daily_5', '0,1,2,3,4,5,6', 1, 'ad_respawn'),
+('task_daily_all', 'daily', '每日任務全部完成', 'reward_daily_all', '0,1,2,3,4,5,6', 0, 'complete_tasks');
 
-('task_daily_2', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '1,4', 'play_score'),
-('task_daily_3', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '2,7', 'play_score'),
-('task_daily_4', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '3,5', 'play_score'),
-('task_daily_5', 'daily', '隨機模式遊玩達指定分數', 'reward_daily_2', '6', 'play_score'),
+-- 插入每周任務
+INSERT INTO Tasks (taskId, type, description, rewardId, schedule, conditionCount, operation) VALUES
+('task_weekly_1', 'weekly', '各模式遊玩', 'reward_weekly_1', '1,2,3,4', 5, 'play_count'),
+('task_weekly_2', 'weekly', '隨機模式達指定分數', 'reward_weekly_2', '1', 1, 'play_score'),
+('task_weekly_3', 'weekly', '隨機模式達指定分數', 'reward_weekly_2', '2', 1, 'play_score'),
+('task_weekly_4', 'weekly', '隨機模式達指定分數', 'reward_weekly_2', '3', 1, 'play_score'),
+('task_weekly_5', 'weekly', '隨機模式達指定分數', 'reward_weekly_2', '4', 1, 'play_score'),
+('task_weekly_6', 'weekly', '合出特定角色', 'reward_weekly_3', '1', 6, 'combine_character'),
+('task_weekly_7', 'weekly', '合出特定角色', 'reward_weekly_3', '2', 6, 'combine_character'),
+('task_weekly_8', 'weekly', '合出特定角色', 'reward_weekly_3', '3', 6, 'combine_character'),
+('task_weekly_9', 'weekly', '合出特定角色', 'reward_weekly_3', '4', 6, 'combine_character'),
+('task_weekly_10', 'weekly', '使用道具', 'reward_weekly_4', '1,2,3,4', 1, 'use_items'),
+('task_weekly_11', 'weekly', '觀看廣告', 'reward_weekly_5', '1,2,3,4', 1, 'ad_respawn'),
+('task_weekly_12', 'weekly', '購買裝飾', 'reward_weekly_6', '1', 3, 'buy_decoration'),
+('task_weekly_13', 'weekly', '購買裝飾', 'reward_weekly_6', '2', 3, 'buy_decoration'),
+('task_weekly_14', 'weekly', '購買裝飾', 'reward_weekly_6', '3', 3, 'buy_decoration'),
+('task_weekly_15', 'weekly', '購買裝飾', 'reward_weekly_6', '4', 3, 'buy_decoration'),
+('task_weekly_all', 'weekly', '每周任務全部完成', 'reward_weekly_all', '1,2,3,4', 0, 'complete_tasks');
 
-('task_daily_6', 'daily', '合出特定角色次數', 'reward_daily_2', '6', 'play_score'),
+-- 插入每日任務條件
+INSERT INTO TaskConditions (taskId, description, targetValue, extra) VALUES
+('task_daily_1', '模式A遊玩1次', 1, '{"gameMode": "modeA"}'),
+('task_daily_1', '模式B遊玩1次', 1, '{"gameMode": "modeB"}'),
+('task_daily_1', '模式C遊玩1次', 1, '{"gameMode": "modeC"}'),
+('task_daily_1', '模式D遊玩1次', 1, '{"gameMode": "modeD"}'),
+('task_daily_1', '模式E遊玩1次', 1, '{"gameMode": "modeE"}'),
 
--- 插入任务条件数据
-INSERT INTO TaskConditions (taskId, description, targetValue) VALUES
-('task_daily_1', '遊玩1次', 1),
-('task_daily_2', '遊玩達1200分', 1200, '1,4'),
-('task_daily_3', '遊玩達1300分', 1300, '2,7'),
-('task_daily_4', '遊玩達1500分', 1500, '3,5'),
-('task_daily_5', '遊玩達1800分', 1800, '6'),
+('task_daily_2', '模式A遊玩達1200分', 1200, '{"gameMode": "modeA"}'),
+('task_daily_2', '模式B遊玩達1200分', 1200, '{"gameMode": "modeB"}'),
+('task_daily_2', '模式C遊玩達1200分', 1200, '{"gameMode": "modeC"}'),
+('task_daily_2', '模式D遊玩達1200分', 1200, '{"gameMode": "modeD"}'),
+('task_daily_2', '模式E遊玩達1200分', 1200, '{"gameMode": "modeE"}'),
+
+('task_daily_3', '模式A遊玩達1300分', 1300, '{"gameMode": "modeA"}'),
+('task_daily_3', '模式B遊玩達1300分', 1300, '{"gameMode": "modeB"}'),
+('task_daily_3', '模式C遊玩達1300分', 1300, '{"gameMode": "modeC"}'),
+('task_daily_3', '模式D遊玩達1300分', 1300, '{"gameMode": "modeD"}'),
+('task_daily_3', '模式E遊玩達1300分', 1300, '{"gameMode": "modeE"}'),
+
+('task_daily_4', '模式A遊玩達1500分', 1500, '{"gameMode": "modeA"}'),
+('task_daily_4', '模式B遊玩達1500分', 1500, '{"gameMode": "modeB"}'),
+('task_daily_4', '模式C遊玩達1500分', 1500, '{"gameMode": "modeC"}'),
+('task_daily_4', '模式D遊玩達1500分', 1500, '{"gameMode": "modeD"}'),
+('task_daily_4', '模式E遊玩達1500分', 1500, '{"gameMode": "modeE"}'),
+
+('task_daily_5', '模式A遊玩達1800分', 1800, '{"gameMode": "modeA"}'),
+('task_daily_5', '模式B遊玩達1800分', 1800, '{"gameMode": "modeB"}'),
+('task_daily_5', '模式C遊玩達1800分', 1800, '{"gameMode": "modeC"}'),
+('task_daily_5', '模式D遊玩達1800分', 1800, '{"gameMode": "modeD"}'),
+('task_daily_5', '模式E遊玩達1800分', 1800, '{"gameMode": "modeE"}'),
+
+('task_daily_6', '合出Dinu', 10, '{"character": "Dinu"}'),
+('task_daily_6', '合出Lynn', 10, '{"character": "Lynn"}'),
+
+('task_daily_7', '合出Dinu', 20, '{"character": "Dinu"}'),
+
+('task_daily_8', '合出Remi', 8, '{"character": "Remi"}'),
+('task_daily_8', '合出Zolly', 4, '{"character": "Zolly"}'),
+('task_daily_8', '合出Bob', 2, '{"character": "Bob"}'),
+
+('task_daily_9', '合出最大球', 1, '{"character": "Biggest"}'),
+
+('task_daily_10', '使用任意道具', 2, null),
+
+('task_daily_11', '觀看續命廣告', 2, '{"adMode": "Respawn"}');
+
+
+-- 插入每月任務條件
+INSERT INTO TaskConditions (taskId, description, targetValue, extra) VALUES
+('task_weekly_1', '模式A遊玩3次', 3, '{"gameMode": "modeA"}'),
+('task_weekly_1', '模式B遊玩3次', 3, '{"gameMode": "modeB"}'),
+('task_weekly_1', '模式C遊玩3次', 3, '{"gameMode": "modeC"}'),
+('task_weekly_1', '模式D遊玩3次', 3, '{"gameMode": "modeD"}'),
+('task_weekly_1', '模式E遊玩3次', 3, '{"gameMode": "modeE"}'),
+
+('task_weekly_2', '模式A遊玩達2000分', 2000, '{"gameMode": "modeA"}'),
+('task_weekly_2', '模式B遊玩達2000分', 2000, '{"gameMode": "modeB"}'),
+('task_weekly_2', '模式C遊玩達2000分', 2000, '{"gameMode": "modeC"}'),
+('task_weekly_2', '模式D遊玩達2000分', 2000, '{"gameMode": "modeD"}'),
+('task_weekly_2', '模式E遊玩達2000分', 2000, '{"gameMode": "modeE"}'),
+
+('task_weekly_3', '模式A遊玩達2200分', 2200, '{"gameMode": "modeA"}'),
+('task_weekly_3', '模式B遊玩達2200分', 2200, '{"gameMode": "modeB"}'),
+('task_weekly_3', '模式C遊玩達2200分', 2200, '{"gameMode": "modeC"}'),
+('task_weekly_3', '模式D遊玩達2200分', 2200, '{"gameMode": "modeD"}'),
+('task_weekly_3', '模式E遊玩達2200分', 2200, '{"gameMode": "modeE"}'),
+
+('task_weekly_4', '模式A遊玩達2400分', 2400, '{"gameMode": "modeA"}'),
+('task_weekly_4', '模式B遊玩達2400分', 2400, '{"gameMode": "modeB"}'),
+('task_weekly_4', '模式C遊玩達2400分', 2400, '{"gameMode": "modeC"}'),
+('task_weekly_4', '模式D遊玩達2400分', 2400, '{"gameMode": "modeD"}'),
+('task_weekly_4', '模式E遊玩達2400分', 2400, '{"gameMode": "modeE"}'),
+
+('task_weekly_5', '模式A遊玩達2500分', 2500, '{"gameMode": "modeA"}'),
+('task_weekly_5', '模式B遊玩達2500分', 2500, '{"gameMode": "modeB"}'),
+('task_weekly_5', '模式C遊玩達2500分', 2500, '{"gameMode": "modeC"}'),
+('task_weekly_5', '模式D遊玩達2500分', 2500, '{"gameMode": "modeD"}'),
+('task_weekly_5', '模式E遊玩達2500分', 2500, '{"gameMode": "modeE"}'),
+
+('task_weekly_6', '合出Dinu', 50, '{"character": "Dinu"}'),
+('task_weekly_6', '合出Lynn', 20, '{"character": "Lynn"}'),
+('task_weekly_6', '合出Remi', 15, '{"character": "Remi"}'),
+('task_weekly_6', '合出Zolly', 5, '{"character": "Zolly"}'),
+('task_weekly_6', '合出Bob', 5, '{"character": "Bob"}'),
+('task_weekly_6', '合出最大球', 4, '{"character": "Biggest"}'),
+
+('task_weekly_7', '合出Dinu', 50, '{"character": "Dinu"}'),
+('task_weekly_7', '合出Lynn', 20, '{"character": "Lynn"}'),
+('task_weekly_7', '合出Remi', 15, '{"character": "Remi"}'),
+('task_weekly_7', '合出Zolly', 5, '{"character": "Zolly"}'),
+('task_weekly_7', '合出Bob', 5, '{"character": "Bob"}'),
+('task_weekly_7', '合出最大球', 3, '{"character": "Biggest"}'),
+
+('task_weekly_8', '合出Dinu', 80, '{"character": "Dinu"}'),
+('task_weekly_8', '合出Lynn', 20, '{"character": "Lynn"}'),
+('task_weekly_8', '合出Remi', 15, '{"character": "Remi"}'),
+('task_weekly_8', '合出Zolly', 5, '{"character": "Zolly"}'),
+('task_weekly_8', '合出Bob', 5, '{"character": "Bob"}'),
+('task_weekly_8', '合出最大球', 4, '{"character": "Biggest"}'),
+
+('task_weekly_9', '合出Dinu', 100, '{"character": "Dinu"}'),
+('task_weekly_9', '合出Lynn', 20, '{"character": "Lynn"}'),
+('task_weekly_9', '合出Remi', 15, '{"character": "Remi"}'),
+('task_weekly_9', '合出Zolly', 5, '{"character": "Zolly"}'),
+('task_weekly_9', '合出Bob', 5, '{"character": "Bob"}'),
+('task_weekly_9', '合出最大球', 3, '{"character": "Biggest"}'),
+
+('task_weekly_10', '使用任意道具', 5, null),
+
+('task_weekly_11', '觀看續命廣告', 12, '{"adMode": "Respawn"}'),
+
+('task_weekly_12', '購買頭飾', 2, '{"part": "Head"}'),
+('task_weekly_12', '購買眼鏡', 1, '{"part": "Glasses"}'),
+('task_weekly_12', '購買手持', 1, '{"part": "Hand"}'),
+
+('task_weekly_13', '購買頭飾', 1, '{"part": "Head"}'),
+('task_weekly_13', '購買眼鏡', 2, '{"part": "Glasses"}'),
+('task_weekly_13', '購買手持', 1, '{"part": "Hand"}'),
+
+('task_weekly_14', '購買頭飾', 1, '{"part": "Head"}'),
+('task_weekly_14', '購買眼鏡', 1, '{"part": "Glasses"}'),
+('task_weekly_14', '購買手持', 2, '{"part": "Hand"}'),
+
+('task_weekly_15', '購買頭飾', 1, '{"part": "Head"}'),
+('task_weekly_15', '購買眼鏡', 1, '{"part": "Glasses"}'),
+('task_weekly_15', '購買手持', 1, '{"part": "Hand"}');

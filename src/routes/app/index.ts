@@ -7,6 +7,7 @@ import { router as CharacterEggsRoutes  } from './characterEggsRoutes';
 import { router as CombineItemsRoutes  } from './combineItemsRoutes';
 import { router as UserItemRoutes } from './userItemsRoutes';
 import { router as taskRoutes } from './taskRoutes';
+import { router as gachaRoutes } from './gachaRoutes';
 
 const _router: Router = Router({
     mergeParams: true,
@@ -33,5 +34,6 @@ _router.use('/character-eggs', CharacterEggsRoutes);
 _router.use('/combine-items', CombineItemsRoutes);
 _router.use('/items', UserItemRoutes);
 _router.use('/tasks', taskRoutes);
+_router.use('/gacha', gachaRoutes);
 
 export const router = _router;

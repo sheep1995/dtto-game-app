@@ -26,29 +26,6 @@ services:
     networks:
       - app-network
 
-  loki:
-    image: grafana/loki:2.3.0
-    ports:
-      - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
-    volumes:
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
-    networks:
-      - app-network
-
-  grafana:
-    image: grafana/grafana:8.0.0
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-    volumes:
-      - grafana-storage:/var/lib/grafana
-    depends_on:
-      - loki
-    networks:
-      - app-network
-
   app:
     build:
       context: .
@@ -59,8 +36,6 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
-      loki:
         condition: service_started
     environment:
       NODE_ENV: production
@@ -77,16 +52,14 @@ services:
       ENVIRONMENT: development  # or 'prod'
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS}
       JWT_SECRET: ${JWT_SECRET}
-      LOKI_HOST: http://loki:3100
     networks:
       - app-network
     volumes:
       - .:/app
       - /app/node_modules
-
+   
 networks:
   app-network:
-
+  
 volumes:
   db-data:
-  grafana-storage:

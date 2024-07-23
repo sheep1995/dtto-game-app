@@ -60,6 +60,27 @@ export class UserController {
         }
     }
 
+    static async getUserProfile(req: Request, res: Response): Promise<void> {
+        const { userId } = req.user;
+
+        try {
+            const user = await UserService.getUserById(userId);
+            if (user) {
+                res.json({
+                    userId,
+                    user: user.username,
+                    coins: user.coin,
+                    avatar: user.avatar
+                });
+            } else {
+                res.status(500).json({ error: 'Internal server error' });
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     static async updateUser(req: Request, res: Response): Promise<void> {
         const { userId } = req.user;
         const updates = req.body;
@@ -73,13 +94,16 @@ export class UserController {
         }
     }
 
-    static uploadAvatar(req: Request, res: Response) {
+    static async uploadAvatar(req: Request, res: Response) {
+        const { userId } = req.user;
         if (!req.file) {
             return res.status(400).send('No file uploaded.');
         }
-        res.status(200).json({
-            avatar: req.file.linkUrl
-        });
+
+        const avatar = req.file.linkUrl;
+        await UserService.updateUser(userId, { avatar })
+
+        res.status(200).json({ avatar });
     }
 
 }

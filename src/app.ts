@@ -5,6 +5,7 @@ import logger from './logger';
 import authMiddleware from './middlewares/auth';
 import adminAuthMiddleware from './middlewares/adminAuth';
 import { swaggerUi, swaggerSpec } from './swagger';
+import { logMiddleware } from './middlewares/logMiddleware';
 
 class App {
 	public app: Application;
@@ -15,7 +16,7 @@ class App {
 		this.routes();
 		this.errorHandling();
 	}
-
+	
 	private config(): void {
 		this.app.use(express.json());
 		this.app.use(express.urlencoded({ extended: false }));
@@ -34,6 +35,8 @@ class App {
 			logger.info(`Request: ${req.method} ${req.url}`, logData);
 			next();
 		});
+
+		this.app.use(logMiddleware);  // Use the logging middleware
 
 		// Swagger UI route without auth middleware
 		this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));

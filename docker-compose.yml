@@ -81,7 +81,7 @@ services:
     networks:
       - app-network
     volumes:
-      - .:/app
+      #- .:/app
       - /app/node_modules
 
 networks:

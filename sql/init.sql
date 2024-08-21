@@ -27,6 +27,7 @@ CREATE TABLE Items (
     itemType VARCHAR(255) NOT NULL,
     itemAttributes JSON,
     itemDescription TEXT,
+    amortizable BOOLEAN DEFAULT false NOT NULL,
     createdTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

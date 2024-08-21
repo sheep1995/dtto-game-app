@@ -5,8 +5,8 @@ const _router: Router = Router({
     mergeParams: true,
 });
 
-_router.get('/dashboardMetrics', DashboardController.getDashboardMetrics);
-_router.get('/salesStatistics', DashboardController.getSalesStatistics);
+_router.get('/metrics', DashboardController.getDashboardMetrics);
+_router.get('/sales', DashboardController.getSalesStatistics);
 _router.get('/realtime-metrics', DashboardController.getRealTimeMetrics);
 
 export const router = _router;

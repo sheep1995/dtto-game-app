@@ -6,7 +6,7 @@ export class ConsumptionController {
         const { userId, startDate, endDate, sortBy, page, pageSize } = req.query;
 
         try {
-            const consumptions = await ConsumptionService.getConsumptions({
+            const { username, paginatedConsumptions, allPages } = await ConsumptionService.getConsumptions({
                 userId: userId as string,
                 startDate: startDate as string,
                 endDate: endDate as string,
@@ -14,7 +14,15 @@ export class ConsumptionController {
                 page: parseInt(page as string, 10) || 1,
                 pageSize: parseInt(pageSize as string, 10) || 20
             });
-            res.status(200).json(consumptions);
+
+            const response = {
+                username: username,
+                allPages: allPages,
+                page: parseInt(page as string, 10) || 1,
+                list: paginatedConsumptions
+            };
+
+            res.status(200).json(response);
         } catch (error) {
             console.error('Failed to get consumptions:', error);
             res.status(500).send('Internal server error.');

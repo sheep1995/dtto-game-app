@@ -20,6 +20,9 @@ export class Item {
   @Column({ type: 'text', nullable: true })
   itemDescription: string;
 
+  @Column({ type: 'boolean', default: false })
+  amortizable: boolean;
+
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 

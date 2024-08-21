@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
+import { router as adminRoutes } from './adminRoutes';
 import { router as userRoutes } from './userRoutes';
 import { router as itemRoutes } from './itemRoutes';
 import { router as consumptionRoutes } from './consumptionRoutes';
@@ -20,10 +21,11 @@ _router.route('/health-check').get(function (req: Request, res: Response) {
 });
 
 //EXPORT ROUTES WITH BASEPATH
+_router.use('/', adminRoutes);
 _router.use('/users', userRoutes);
 _router.use('/items', itemRoutes);
 _router.use('/consumptions', consumptionRoutes);
-_router.use('/dashboards', dashboardRoutes);
+_router.use('/statistics', dashboardRoutes);
 
 
 export const router = _router;
